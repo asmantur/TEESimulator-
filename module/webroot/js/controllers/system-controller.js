@@ -70,13 +70,13 @@ export function create(mount, opts = {}) {
   // daemon's computed default. Never throws to the view — surfaces failures as a toast.
   async function writeOverride(field, value) {
     const cur = await overridesIo.load();
-    if (!cur.ok) { toast("Cannot read overrides.json: " + cur.error); return; }
+    if (!cur.ok) { toast("无法读取 overrides.json：" + cur.error); return; }
     const next = { ...cur.overrides };
     if (value == null || value === "") delete next[field];
     else next[field] = value;
     const res = await overridesIo.save(next);
-    if (!res.ok) { toast("Save failed: " + res.error); return; }
-    toast("Fabricated value saved — applying…");
+    if (!res.ok) { toast("保存失败：" + res.error); return; }
+    toast("替代值已保存，正在应用…");
     await new Promise((r) => setTimeout(r, OVERRIDE_SETTLE_MS));
     await refreshHealth();
   }
@@ -119,7 +119,7 @@ export function create(mount, opts = {}) {
       const latest = update && update.latest;
       if (!latest || !update.updateAvailable || installing) return;
       const label = "canary-" + (latest.code || "?") + " (" + variant + ")";
-      if (!(await confirmDialog(`Install ${label}? This downloads and flashes the module over the current install.`, { confirmLabel: "Install", danger: false }))) return;
+      if (!(await confirmDialog(`安装 ${label}？这会下载模块并覆盖刷入当前版本。`, { confirmLabel: "安装", danger: false }))) return;
 
       installing = true;
       installError = null;
@@ -127,14 +127,14 @@ export function create(mount, opts = {}) {
       try {
         const res = await keyAdmin("canaryInstall", { tag: latest.tag, variant });
         if (res && res.ok === false) {
-          installError = res.message || "The daemon rejected the install.";
-          toast("Install failed");
+          installError = res.message || "守护进程拒绝了安装请求。";
+          toast("安装失败");
         } else {
-          toast((res && res.message) || "Update flashed — reboot to apply.");
+          toast((res && res.message) || "更新已刷入，重启后生效。");
         }
       } catch (e) {
         installError = e && e.message ? e.message : String(e);
-        toast("Install failed: " + installError);
+        toast("安装失败：" + installError);
       } finally {
         installing = false;
         render();

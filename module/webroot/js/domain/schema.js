@@ -76,62 +76,62 @@ export const MODE_RE = /^(patch|generation)$/;
 export const FIELDS = [
   // --- attestation record -------------------------------------------------
   {
-    key: "keybox", path: ["keybox"], label: "Keybox", group: "attestation",
+    key: "keybox", path: ["keybox"], label: "密钥箱", group: "attestation",
     type: "keybox", re: KEYBOX_RE, required: true, default: "keybox.xml",
-    help: "An *.xml keybox under /data/adb/teesim to sign attestations with.",
+    help: "用于签署密钥证明的 *.xml 密钥箱，存放于 /data/adb/teesim。",
   },
   {
-    key: "mode", path: ["mode"], label: "Operation mode", group: "attestation",
+    key: "mode", path: ["mode"], label: "运行模式", group: "attestation",
     type: "select", options: ["patch", "generation"], required: true, default: "patch",
     re: MODE_RE,
     help:
-      "patch: keep the real hardware key and re-sign only its attestation with the keybox " +
-      "(fewer detection points; needs a working hardware level). generation: mint the whole key " +
-      "in software. A level whose hardware is unavailable always falls back to generation.",
+      "修补模式（patch）：保留真实硬件密钥，仅使用密钥箱重新签署其证明" +
+      "（需要对应的硬件安全级别可用）。生成模式（generation）：完全使用软件" +
+      "生成密钥。若对应安全级别的硬件不可用，将自动回退到生成模式。",
   },
   // --- patch & OS levels (folded away in the editor to keep it concise). Empty means
   //     "use the harvested value" — so these are optional, not required. ---
   {
-    key: "patchSystem", path: ["patchLevel", "system"], label: "System patch",
+    key: "patchSystem", path: ["patchLevel", "system"], label: "系统安全补丁",
     group: "levels", type: "patch", re: PATCH_RE, required: false, default: "today",
     picks: ["system_property", "today", "no"],
   },
   {
-    key: "patchVendor", path: ["patchLevel", "vendor"], label: "Vendor patch",
+    key: "patchVendor", path: ["patchLevel", "vendor"], label: "厂商安全补丁",
     group: "levels", type: "patch", re: PATCH_RE, required: false, default: "YYYY-MM-05",
     picks: ["system_property", "@month05", "today", "no"],
   },
   {
-    key: "patchBoot", path: ["patchLevel", "boot"], label: "Boot patch",
+    key: "patchBoot", path: ["patchLevel", "boot"], label: "启动安全补丁",
     group: "levels", type: "patch", re: PATCH_RE, required: false, default: "YYYY-MM-05",
     picks: ["system_property", "@month05", "today", "no"],
   },
   {
-    key: "osVersion", path: ["osVersion"], label: "OS version",
+    key: "osVersion", path: ["osVersion"], label: "系统版本",
     group: "levels", type: "patch", re: OSVER_RE, required: false, default: "",
     picks: ["system_property"],
   },
   // --- device identity (all optional: blank means "don't provision this id") ---
-  { key: "brand", path: ["brand"], label: "Brand", group: "identity", type: "text", required: false, default: "" },
-  { key: "device", path: ["device"], label: "Device", group: "identity", type: "text", required: false, default: "" },
-  { key: "product", path: ["product"], label: "Product", group: "identity", type: "text", required: false, default: "" },
-  { key: "manufacturer", path: ["manufacturer"], label: "Manufacturer", group: "identity", type: "text", required: false, default: "" },
-  { key: "model", path: ["model"], label: "Model", group: "identity", type: "text", required: false, default: "" },
-  { key: "serial", path: ["serial"], label: "Serial", group: "identity", type: "text", required: false, default: "" },
+  { key: "brand", path: ["brand"], label: "品牌", group: "identity", type: "text", required: false, default: "" },
+  { key: "device", path: ["device"], label: "设备代号", group: "identity", type: "text", required: false, default: "" },
+  { key: "product", path: ["product"], label: "产品代号", group: "identity", type: "text", required: false, default: "" },
+  { key: "manufacturer", path: ["manufacturer"], label: "制造商", group: "identity", type: "text", required: false, default: "" },
+  { key: "model", path: ["model"], label: "型号", group: "identity", type: "text", required: false, default: "" },
+  { key: "serial", path: ["serial"], label: "序列号", group: "identity", type: "text", required: false, default: "" },
   { key: "imei", path: ["imei"], label: "IMEI", group: "identity", type: "text", required: false, default: "" },
   { key: "meid", path: ["meid"], label: "MEID", group: "identity", type: "text", required: false, default: "" },
   { key: "imei2", path: ["imei2"], label: "IMEI2", group: "identity", type: "text", required: false, default: "" },
   // --- targeting ----------------------------------------------------------
   {
-    key: "apps", path: ["apps"], label: "Apps", group: "apps", type: "scope",
+    key: "apps", path: ["apps"], label: "应用", group: "apps", type: "scope",
     re: APP_ENTRY_RE, required: true, default: [],
-    help: "The apps this profile attests for.",
+    help: "此方案提供密钥证明的应用。",
   },
   {
-    key: "autoIncludeNewApps", path: ["autoIncludeNewApps"], label: "Auto-include new apps",
+    key: "autoIncludeNewApps", path: ["autoIncludeNewApps"], label: "自动纳入新应用",
     group: "apps", type: "toggle", required: false, default: false,
-    help: "Targets apps installed after now; existing apps stay untouched. New apps are discovered " +
-      "on a rescan, not watched for live.",
+    help: "纳入基准建立后新安装的应用，已有应用不受影响。新应用会在" +
+      "重新扫描时发现，不会实时监测。",
   },
 ];
 

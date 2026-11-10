@@ -99,7 +99,7 @@ export function create(mount) {
   function openFilters() {
     filterHost = document.createElement("div");
     filterHost.appendChild(renderLogFilters({ filter, tags: seenTags() }, filterActions));
-    filterOverlay = openSheet(filterHost, { label: "Filter logs", onClose: () => { filterHost = null; filterOverlay = null; } });
+    filterOverlay = openSheet(filterHost, { label: "筛选日志", onClose: () => { filterHost = null; filterOverlay = null; } });
   }
 
   function closeFilters() {
@@ -116,7 +116,7 @@ export function create(mount) {
     const name = defaultLogName(moduleVer);
     saveHost = document.createElement("div");
     saveHost.appendChild(renderSaveSheet({ dir, name }, saveActions));
-    saveOverlay = openSheet(saveHost, { label: "Save logs", onClose: () => { saveHost = null; saveOverlay = null; } });
+    saveOverlay = openSheet(saveHost, { label: "保存日志", onClose: () => { saveHost = null; saveOverlay = null; } });
   }
 
   const saveActions = {
@@ -128,14 +128,14 @@ export function create(mount) {
         const res = await keyAdmin("report", { dir: folder, name });
         if (res && res.ok) {
           localStorage.setItem(SAVE_DIR_KEY, folder);
-          toast("Saved " + (res.bytes ? Math.round(res.bytes / 1024) + " KB to " : "to ") + res.path);
+          toast("已保存 " + (res.bytes ? Math.round(res.bytes / 1024) + " KB 至 " : "至 ") + res.path);
           if (saveOverlay) saveOverlay.close();
         } else {
-          toast("Save failed: " + ((res && res.error) || "unknown error"));
+          toast("保存失败：" + ((res && res.error) || "未知错误"));
         }
       } catch (e) {
         console.error("[logs.save] report failed:", e);
-        toast("Save failed: " + (e && e.message ? e.message : String(e)));
+        toast("保存失败：" + (e && e.message ? e.message : String(e)));
       }
     },
     close() { if (saveOverlay) saveOverlay.close(); },

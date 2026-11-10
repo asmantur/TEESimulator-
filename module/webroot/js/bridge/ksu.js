@@ -19,7 +19,7 @@ export function exec(cmd) {
   return new Promise((resolve) => {
     if (!hasBridge()) {
       console.warn("[ksu] no bridge (window.ksu.exec absent); cmd skipped:", String(cmd).slice(0, 120));
-      resolve({ errno: -1, stdout: "", stderr: "no ksu bridge" });
+      resolve({ errno: -1, stdout: "", stderr: "未检测到 root 管理器的 WebUI 桥接接口" });
       return;
     }
     // A fresh random global per call: concurrent execs never clobber each other,

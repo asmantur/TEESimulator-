@@ -237,7 +237,7 @@ export function create(mount) {
       }),
     };
     editorHost = el("div", { class: "editor-host" });
-    editorOverlay = openOverlay(editorHost, { variant: "panel", label: "Edit profile", onClose: onEditorClosed });
+    editorOverlay = openOverlay(editorHost, { variant: "panel", label: "编辑方案", onClose: onEditorClosed });
     renderEditor();
     const title = editorHost.querySelector(".drill-title");
     if (title) title.focus();
@@ -364,7 +364,7 @@ export function create(mount) {
     scopeCommitted = false;
     scopePullBound = false;
     scopeHost = el("div", { class: "editor-host" });
-    scopeOverlay = openOverlay(scopeHost, { variant: "panel", label: "Scope", onClose: onScopeClosed });
+    scopeOverlay = openOverlay(scopeHost, { variant: "panel", label: "作用范围", onClose: onScopeClosed });
 
     // Rescan, then fetch the live app list. Always the spinner path, cache or not: the point is that
     // what the user first sees is post-rescan.
@@ -444,8 +444,8 @@ export function create(mount) {
       // by the browser, desyncing the nav stack from history (a later Back would then over-pop). Defer
       // to a fresh task so the confirm's history push happens cleanly after this traversal finishes.
       setTimeout(() => {
-        confirmDialog("Keep the app selection changes you made?", {
-          confirmLabel: "Keep", cancelLabel: "Discard", danger: false,
+        confirmDialog("保留对应用选择的更改吗？", {
+          confirmLabel: "保留", cancelLabel: "放弃", danger: false,
         }).then((keep) => {
           if (keep && config.profiles[name]) {
             config.profiles[name].apps = draft;
@@ -524,8 +524,8 @@ export function create(mount) {
         // less privileged than user 0's 1000.
         if (uid >= 0 && uid % 100000 < firstAppUid) {
           const ok = await confirmDialog(
-            `Target privileged uid ${uid}?\n\nThis is a system/shell uid (e.g. shell, system_server), not a normal app. Only do this if you know exactly why.`,
-            { confirmLabel: "Target it", danger: true });
+            `指定特权 UID ${uid}？\n\n这是系统或 shell 的 UID（例如 shell、system_server），并非普通应用。请仅在明确了解用途时操作。`,
+            { confirmLabel: "确认指定", danger: true });
           if (!ok) return;
         }
         // Pinning an app that ANOTHER profile currently auto-includes is legal — Scope.resolve
@@ -534,8 +534,8 @@ export function create(mount) {
         const autoBy = autoOwnerMap().get(uid);
         if (autoBy && autoBy !== scoping) {
           const ok = await confirmDialog(
-            `This app is auto-included by profile “${autoBy}”.\n\nPinning it here takes it out of that profile's automatic scope from the next rescan.`,
-            { confirmLabel: "Pin it here" });
+            `此应用已由方案“${autoBy}”自动纳入。\n\n固定到此方案后，从下次扫描起，它将不再属于原方案的自动作用范围。`,
+            { confirmLabel: "固定到此方案" });
           if (!ok) return;
           console.log("[config] scope: pinning %s away from auto profile %s", entry, autoBy);
         }
@@ -584,15 +584,15 @@ export function create(mount) {
     },
     async onClearUsage() {
       const ok = await confirmDialog(
-        "Clear the recorded app-usage (frequency) memory?\n\nThis wipes the request counts used to sort and populate Recent. It does not change any profile.",
-        { confirmLabel: "Clear usage", danger: true });
+        "清除已记录的应用使用频次吗？\n\n这会清除用于排序和“最近使用”列表的请求统计，不会更改任何方案。",
+        { confirmLabel: "清除使用记录", danger: true });
       if (!ok) return;
       try {
         const r = await keyAdmin("usageClear");
-        toast("Cleared " + ((r && r.cleared) || 0) + " app" + (((r && r.cleared) || 0) === 1 ? "" : "s"));
+        toast("已清除 " + ((r && r.cleared) || 0) + " 个应用的使用记录");
         console.log("[config] scope: usage cleared (%o)", r);
       } catch (e) {
-        toast("Clear failed: " + ((e && e.message) || e));
+        toast("清除失败：" + ((e && e.message) || e));
       }
       fetchPackages(false);
     },
@@ -602,15 +602,15 @@ export function create(mount) {
   // sets scopeSort and re-renders. It is a plain sheet built here (the controller owns dom.js).
   function openSortSheet() {
     const OPTIONS = [
-      { id: "freq", label: "Frequency", meaning: "Most key requests first (default)." },
-      { id: "recent", label: "Recently used", meaning: "Last requested first." },
-      { id: "name", label: "Name", meaning: "A→Z." },
-      { id: "install", label: "Install time", meaning: "Newest installs first." },
+      { id: "freq", label: "请求频次", meaning: "密钥请求次数最多的优先（默认）。" },
+      { id: "recent", label: "最近请求", meaning: "最近请求过密钥的优先。" },
+      { id: "name", label: "名称", meaning: "按应用名称排序。" },
+      { id: "install", label: "安装时间", meaning: "最近安装的优先。" },
     ];
     let handle = null;
     const pick = (id) => { scopeSort = id; if (handle) handle.close(); renderScopeView(); };
     const content = el("div", { class: "sort-sheet" }, [
-      el("div", { class: "sheet-head" }, [el("h2", { text: "Sort by" })]),
+      el("div", { class: "sheet-head" }, [el("h2", { text: "排序依据" })]),
       el("div", { class: "sort-list" }, OPTIONS.map((o) => el("button", {
         type: "button", class: "sort-opt" + (scopeSort === o.id ? " on" : ""),
         "aria-pressed": scopeSort === o.id ? "true" : "false", onclick: () => pick(o.id),
@@ -622,7 +622,7 @@ export function create(mount) {
         el("span", { class: "sort-opt-check" + (scopeSort === o.id ? " on" : ""), "aria-hidden": "true" }),
       ]))),
     ]);
-    handle = openSheet(content, { label: "Sort order" });
+    handle = openSheet(content, { label: "排序方式" });
   }
 
   // ---- the one save path (used by both the list bar and the editor) -----
@@ -643,22 +643,22 @@ export function create(mount) {
     const r = await ioSave(config);
     if (r.ok) {
       dirty = false;
-      toast("Saved");
+      toast("已保存");
       if (editing) closeEditor(); // returns to the freshly-repainted list
       else renderList();
     } else {
-      toast("Save failed: " + (r.error || "unknown error"));
+      toast("保存失败：" + (r.error || "未知错误"));
     }
   }
 
   const listActions = {
     async onAdd() {
-      const name = await promptDialog("New profile name", "", { okLabel: "Create", placeholder: "profile-name" });
+      const name = await promptDialog("新方案名称", "", { okLabel: "创建", placeholder: "方案名（英文字母、数字、- 或 _）" });
       if (name == null) return;
       const trimmed = name.trim();
       if (!trimmed) return;
-      if (!PROFILE_RE.test(trimmed)) { toast("Name must be 1-32 chars: letters, digits, - or _."); return; }
-      if (config.profiles[trimmed]) { toast("A profile named " + trimmed + " already exists."); return; }
+      if (!PROFILE_RE.test(trimmed)) { toast("名称须为 1–32 个字符，仅支持英文字母、数字、- 或 _。"); return; }
+      if (config.profiles[trimmed]) { toast("已存在同名方案：“" + trimmed + "”。"); return; }
       config.profiles[trimmed] = emptyProfile();
       dirty = true;
       revalidate();
@@ -714,7 +714,7 @@ export function create(mount) {
 
     async onRemove(name) {
       if (!config.profiles[name]) return;
-      if (!(await confirmDialog(`Remove profile "${name}"?`))) return;
+      if (!(await confirmDialog(`删除方案“${name}”？`))) return;
       delete config.profiles[name];
       dirty = true;
       revalidate();
@@ -750,20 +750,20 @@ export function create(mount) {
   function renderLoadError(res) {
     clear(mount);
     const canSeed = !res.raw || res.raw.trim() === "";
-    mount.appendChild(el("div", { class: "panel-head" }, [el("h1", { class: "panel-title", text: "Profiles" })]));
+    mount.appendChild(el("div", { class: "panel-head" }, [el("h1", { class: "panel-title", text: "配置方案" })]));
     const card = el("div", { class: "card" }, [
       el("div", { class: "banner error" }, [el("div", { text: res.error })]),
       canSeed
-        ? el("p", { class: "muted small", text: "The module seeds config.json on install. You can create a starter config now." })
-        : el("p", { class: "muted small", text: "Fix or remove the file on disk — the WebUI will not overwrite a config it cannot read." }),
+        ? el("p", { class: "muted small", text: "模块安装时会生成 config.json。现在可以创建初始配置。" })
+        : el("p", { class: "muted small", text: "请修复或移除磁盘上的配置文件；WebUI 不会覆盖无法读取的配置。" }),
     ]);
     if (canSeed) {
       card.appendChild(el("button", {
-        class: "btn primary", text: "Create starter config",
+        class: "btn primary", text: "创建初始配置",
         onclick: async () => {
           config = emptyConfig();
           const r = await ioSave(config);
-          if (!r.ok) { toast("Could not create config: " + (r.error || "")); return; }
+          if (!r.ok) { toast("无法创建配置：" + (r.error || "")); return; }
           loaded = true;
           keyboxFiles = await listKeyboxes();
           dirty = false;
@@ -790,10 +790,10 @@ export function create(mount) {
     try {
       const r = await keyAdmin("rescan");
       msg = (r && r.ok)
-        ? "Rescanned — " + r.uids + (r.uids === 1 ? " app" : " apps") + " targeted"
-        : "Rescan failed: " + ((r && r.error) || "unknown error");
+        ? "重新扫描完成，已指定 " + r.uids + (r.uids === 1 ? " 个应用" : " 个应用") + "。"
+        : "重新扫描失败：" + ((r && r.error) || "未知错误");
     } catch (e) {
-      msg = "Rescan failed: " + (e && e.message ? e.message : String(e));
+      msg = "重新扫描失败：" + (e && e.message ? e.message : String(e));
     }
 
     packagesCache = null; // force the Scope page and the editor's chips to re-fetch

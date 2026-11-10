@@ -17,24 +17,24 @@ export async function load() {
   const raw = await readFile(CONFIG);
 
   if (!raw || raw.trim() === "") {
-    return { ok: false, error: "No config.json found (or it is empty).", raw: raw || "" };
+    return { ok: false, error: "未找到 config.json，或文件为空。", raw: raw || "" };
   }
 
   let config;
   try {
     config = JSON.parse(raw);
   } catch (e) {
-    return { ok: false, error: "config.json is not valid JSON: " + e.message, raw };
+    return { ok: false, error: "config.json 的 JSON 格式无效：" + e.message, raw };
   }
 
   if (!config || typeof config !== "object" || Array.isArray(config)) {
-    return { ok: false, error: "config.json root must be a JSON object.", raw };
+    return { ok: false, error: "config.json 的根节点必须为 JSON 对象。", raw };
   }
   if (config.version !== 1) {
-    return { ok: false, error: "Unsupported config version (expected 1).", raw };
+    return { ok: false, error: "不支持此配置版本，需要版本 1。", raw };
   }
   if (!config.profiles || typeof config.profiles !== "object" || Array.isArray(config.profiles)) {
-    return { ok: false, error: "config.json is missing a profiles object.", raw };
+    return { ok: false, error: "config.json 缺少 profiles 对象。", raw };
   }
 
   return { ok: true, config };

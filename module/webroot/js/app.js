@@ -42,7 +42,7 @@ function setHealth(status) {
   const ok = !!(status && status.reachable);
   dot.classList.toggle("ok", ok);
   dot.classList.toggle("off", !ok);
-  label.textContent = ok ? "running" : "unreachable";
+  label.textContent = ok ? "运行中" : "无法连接";
 }
 
 function setBadge(on) {

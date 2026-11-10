@@ -1,5 +1,7 @@
 # TEESimulator
 
+[简体中文界面与使用说明](README.zh-CN.md)
+
 *TEESimulator* defeats hardware-backed [Key Attestation](https://developer.android.com/privacy-and-security/security-key-attestation) by serving selected apps from a software KeyMint that runs *inside* the real keystore daemon, while every other key stays on the device's real hardware.
 
 Rather than patch certificates after the fact, it embeds AOSP's own reference KeyMint trusted application ([`kmr-ta`](https://cs.android.com/android/platform/superproject/main/+/main:system/keymint/)) and signs attestations with a user-provided keybox. The certificates are generated the same way a real TEE generates them, so they are internally consistent by construction.

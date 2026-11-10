@@ -1,0 +1,11 @@
+{
+  "name": "teesimulator-localization-checks",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node check.mjs"
+  },
+  "dependencies": {
+    "acorn": "8.19.0"
+  }
+}

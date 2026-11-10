@@ -1,0 +1,165 @@
+name: 中文版自动维护
+
+on:
+  schedule:
+    - cron: "0 1 * * *" # About 09:00 Asia/Singapore; GitHub may delay scheduled runs.
+  workflow_dispatch:
+  push:
+    branches: [dev]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: zh-cn-maintenance
+  cancel-in-progress: false
+
+jobs:
+  maintain:
+    if: github.repository == 'asmantur/TEESimulator-'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      CARGO_BUILD_JOBS: "2"
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: 合并上游更新（冲突时停止）
+        id: sync
+        run: python3 scripts/sync-upstream.py
+
+      - name: 确定本次是否需要构建
+        id: plan
+        env:
+          CHANGED: ${{ steps.sync.outputs.changed }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$CHANGED" = true ] || [ "$EVENT" != schedule ]; then
+            echo 'build=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'build=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v6
+        if: steps.plan.outputs.build == 'true'
+        with:
+          node-version: "22"
+
+      - name: 汉化与配置检查
+        if: steps.plan.outputs.build == 'true'
+        run: |
+          set -euo pipefail
+          npm ci --prefix scripts/localization --ignore-scripts --no-audit --no-fund
+          node scripts/localization/check.mjs
+          node --test scripts/localization/check.test.mjs module/webroot/tests/domain.test.mjs
+          python3 -m unittest discover -s scripts -p 'test_*.py'
+          sh -n module/customize.sh
+
+      - name: 初始化固定版本子模块
+        if: steps.plan.outputs.build == 'true'
+        run: git submodule update --init --recursive
+
+      - name: 读取合并后的工具链版本
+        if: steps.plan.outputs.build == 'true'
+        run: python3 scripts/android-build-env.py >> "$GITHUB_ENV"
+
+      - uses: actions/setup-java@v6
+        if: steps.plan.outputs.build == 'true'
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: 安装原生编译依赖
+        if: steps.plan.outputs.build == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build golang-go clang libclang-dev zip
+
+      - uses: android-actions/setup-android@v4
+        if: steps.plan.outputs.build == 'true'
+
+      - name: 安装 Android SDK 和 NDK
+        if: steps.plan.outputs.build == 'true'
+        run: sdkmanager --install "ndk;${NDK_VERSION}" "cmake;3.22.1" "build-tools;${BUILD_TOOLS_VERSION}" "platforms;android-${COMPILE_SDK}"
+
+      - name: 安装 Rust 工具链
+        if: steps.plan.outputs.build == 'true'
+        run: |
+          rustup target add aarch64-linux-android x86_64-linux-android
+          rustup component add clippy
+          cargo install cargo-ndk --version 4.1.2 --locked
+
+      - uses: actions/cache@v6
+        if: steps.plan.outputs.build == 'true'
+        with:
+          path: |
+            ~/.cargo/registry
+            rust/target
+          key: zh-cn-cargo-${{ env.NDK_VERSION }}-${{ hashFiles('rust/**/Cargo.toml') }}
+
+      - name: 检查 Rust 并构建双架构中文版
+        if: steps.plan.outputs.build == 'true'
+        run: |
+          set -euo pipefail
+          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/$NDK_VERSION"
+          ./rust/build.sh clippy
+          ./gradlew :app:checkWebrootJs zipRelease zipDebug --no-daemon --max-workers=2
+
+      - name: 验证产物并生成更新信息
+        if: steps.plan.outputs.build == 'true'
+        id: release
+        run: python3 scripts/prepare-zh-release.py
+
+      - name: 检查通过后更新中文版分支
+        if: steps.plan.outputs.build == 'true' && steps.sync.outputs.changed == 'true'
+        # A normal push fails if dev advanced meanwhile; never force-push/reset.
+        run: git push origin HEAD:refs/heads/dev
+
+      - name: 发布中文版与更新描述
+        if: steps.plan.outputs.build == 'true'
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
+          CODE: ${{ steps.release.outputs.code }}
+          BUILT_SHA: ${{ steps.sync.outputs.head_sha }}
+        run: |
+          set -euo pipefail
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" --target "$BUILT_SHA" --prerelease \
+              --title "TEESimulator 简体中文版 ${CODE}" --notes-file out/changelog.md
+          fi
+          gh release upload "$TAG" out/TEESimulator-*-Release.zip out/TEESimulator-*-Debug.zip out/SHA256SUMS --clobber
+          # Update the rolling descriptor only after the referenced ZIPs were uploaded.
+          if ! gh release view zh-cn-latest >/dev/null 2>&1; then
+            gh release create zh-cn-latest --target "$BUILT_SHA" --prerelease \
+              --title '简体中文版更新入口' --notes '供模块管理器检查中文版更新。'
+          fi
+          gh release upload zh-cn-latest out/update.json out/changelog.md --clobber
+
+      - name: 保存构建产物及失败诊断
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: zh-cn-maintenance-${{ github.run_id }}
+          retention-days: 14
+          include-hidden-files: true
+          path: |
+            /tmp/teesim-sync-report.md
+            out/*.zip
+            out/update.json
+            out/SHA256SUMS
+            app/build/intermediates/cxx/**/logs/**
+
+      - name: 输出维护结果
+        if: always()
+        env:
+          RESULT: ${{ job.status }}
+        run: |
+          cat /tmp/teesim-sync-report.md >> "$GITHUB_STEP_SUMMARY"
+          printf '\n本次结果：%s\n' "$RESULT" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$RESULT" != success ]; then
+            printf '\n已停止自动发布。请查看失败步骤及诊断产物，将日志交给维护者处理；不要强制同步或重建英文基线。\n' >> "$GITHUB_STEP_SUMMARY"
+          fi

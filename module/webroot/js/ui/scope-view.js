@@ -61,10 +61,10 @@ const SEARCH_ID = "scope-search-input";
 // Recent is first and default: the apps that have asked for a key since this boot are what a
 // user most likely wants to target. The rest split into user apps, system, and current picks.
 const FILTERS = [
-  { id: "recent", label: "Recent" },
-  { id: "user", label: "User" },
-  { id: "system", label: "System" },
-  { id: "selected", label: "Selected" },
+  { id: "recent", label: "最近使用" },
+  { id: "user", label: "用户应用" },
+  { id: "system", label: "系统" },
+  { id: "selected", label: "已选择" },
 ];
 
 // A stable, pleasant avatar colour from any string: a tiny rolling hash into a hue, with fixed
@@ -96,7 +96,7 @@ function rowEntries(row) {
 function userOf(row, users) {
   const id = row.userId || 0;
   const found = (users || []).find((u) => u.id === id);
-  return found || { id, name: id === 0 ? "Owner" : "User " + id, managed: false };
+  return found || { id, name: id === 0 ? "主用户" : "用户 " + id, managed: false };
 }
 
 export function renderScope(host, state, actions) {
@@ -122,10 +122,10 @@ export function renderScope(host, state, actions) {
 
   // ---- header ----------------------------------------------------------
   host.appendChild(el("div", { class: "drill-head" }, [
-    el("button", { class: "iconbtn", type: "button", "aria-label": "Back to profile", onclick: () => actions.onClose() }, [
+    el("button", { class: "iconbtn", type: "button", "aria-label": "返回方案", onclick: () => actions.onClose() }, [
       el("span", { class: "chevron-left", "aria-hidden": "true" }),
     ]),
-    el("h1", { class: "drill-title", text: "Scope — " + profileName, tabindex: "-1" }),
+    el("h1", { class: "drill-title", text: "作用范围 — " + profileName, tabindex: "-1" }),
   ]));
 
   const body = el("div", { class: "drill-body" });
@@ -133,18 +133,18 @@ export function renderScope(host, state, actions) {
   // ---- search row: a leading search-icon button inside the field, a trailing sort button ----
   const searchInput = el("input", {
     id: SEARCH_ID, class: "input scope-search-input", type: "search", value: search,
-    placeholder: "Search apps, packages, users, or uid…",
+    placeholder: "搜索应用、包名、用户或 UID…",
     autocapitalize: "off", autocorrect: "off", spellcheck: "false",
     oninput: (e) => actions.onSetSearch(e.target.value),
     onkeydown: (e) => { if (e.key === "Enter") { e.preventDefault(); actions.onSearchSubmit(); } },
   });
   body.appendChild(el("div", { class: "scope-search" }, [
     el("div", { class: "scope-search-field" }, [
-      el("button", { type: "button", class: "scope-search-btn", "aria-label": "Search", onclick: () => actions.onSearchSubmit() }, [
+      el("button", { type: "button", class: "scope-search-btn", "aria-label": "搜索", onclick: () => actions.onSearchSubmit() }, [
         svgIcon(ICON_SEARCH, { size: 18 }),
       ]),
       searchInput,
-      el("button", { type: "button", class: "scope-sort-btn", "aria-label": "Sort order", onclick: () => actions.onOpenSort() }, [
+      el("button", { type: "button", class: "scope-sort-btn", "aria-label": "排序方式", onclick: () => actions.onOpenSort() }, [
         svgIcon(ICON_SORT, { size: 18 }),
       ]),
     ]),
@@ -162,13 +162,13 @@ export function renderScope(host, state, actions) {
   // A work profile roughly doubles the list, and the same app then appears once per user, so the
   // narrowing control earns its row there — and is absent (identical to the old UI) everywhere else.
   if (users.length > 1) {
-    const segs = [{ id: null, label: "All users" }].concat(
+    const segs = [{ id: null, label: "所有用户" }].concat(
       users.map((u) => ({ id: u.id, label: u.name })));
     body.appendChild(el("div", { class: "segmented scope-users" },
       segs.map((s) => el("button", {
         type: "button", class: "seg" + (userFilter === s.id ? " on" : ""),
         "aria-pressed": userFilter === s.id ? "true" : "false",
-        title: s.id == null ? "Show apps from every Android user" : "Show only user " + s.id,
+        title: s.id == null ? "显示所有 Android 用户的应用" : "仅显示用户 " + s.id,
         onclick: () => actions.onSetUserFilter(s.id),
       }, s.label))));
   }
@@ -176,11 +176,11 @@ export function renderScope(host, state, actions) {
   // ---- loading / error short-circuits ---------------------------------
   if (loading) {
     body.appendChild(el("div", { class: "scope-status" }, [
-      el("span", { class: "spinner" }), el("span", { class: "muted", text: "Reading installed apps…" }),
+      el("span", { class: "spinner" }), el("span", { class: "muted", text: "正在读取已安装应用…" }),
     ]));
   } else if (error) {
     body.appendChild(el("div", { class: "banner error" }, [
-      el("div", { text: "Could not read the device app list" }),
+      el("div", { text: "无法读取设备应用列表" }),
       el("div", { class: "muted small", text: String(error) }),
     ]));
   }
@@ -242,14 +242,14 @@ export function renderScope(host, state, actions) {
     const selectedCount = apps.length;
     const ops = el("div", { class: "scope-ops" }, [
       el("div", { class: "scope-ops-btns" }, [
-        el("button", { type: "button", class: "linklike", text: "Select all", onclick: () => actions.onSelectAllVisible(visibleEntries) }),
-        el("button", { type: "button", class: "linklike", text: "Clear", onclick: () => actions.onClearVisible(visibleEntries) }),
-        el("button", { type: "button", class: "linklike", text: "Invert", onclick: () => actions.onInvertVisible(visibleEntries) }),
+        el("button", { type: "button", class: "linklike", text: "全选", onclick: () => actions.onSelectAllVisible(visibleEntries) }),
+        el("button", { type: "button", class: "linklike", text: "清除选择", onclick: () => actions.onClearVisible(visibleEntries) }),
+        el("button", { type: "button", class: "linklike", text: "反选", onclick: () => actions.onInvertVisible(visibleEntries) }),
         filter === "recent"
-          ? el("button", { type: "button", class: "linklike danger", text: "Clear usage", onclick: () => actions.onClearUsage() })
+          ? el("button", { type: "button", class: "linklike danger", text: "清除使用记录", onclick: () => actions.onClearUsage() })
           : null,
       ]),
-      el("span", { class: "muted small", text: selectedCount + " selected" + (autoMineShown ? " · " + autoMineShown + " auto" : "") }),
+      el("span", { class: "muted small", text: selectedCount + " 项已选" + (autoMineShown ? " · " + autoMineShown + " 个自动纳入" : "") }),
     ]);
     body.appendChild(ops);
 
@@ -257,15 +257,15 @@ export function renderScope(host, state, actions) {
     // than deriving anything: an unseeded baseline means the fail-safe in Scope.resolve is holding
     // auto-include back, which is otherwise visible only in logcat.
     const note = autoInfo && autoInfo.baselineReady === false
-      ? "Auto-include is idle until the package baseline is seeded."
+      ? "应用基准列表建立后，才会启用自动纳入。"
       : autoCount || autoMineShown
-        ? "Auto-include is on — dashed apps are in scope automatically. Tap one to pin it here."
+        ? "已启用自动纳入：虚线应用已自动纳入作用范围，点击可将其固定到此方案。"
         : null;
     if (note) {
       const kids = [el("span", { text: note })];
       // The draft has diverged from what the daemon resolved, so the dashed set on screen is one
       // save behind. Say so rather than re-deriving the rule to predict it.
-      if (pendingSave) kids.push(el("span", { class: "muted", text: " Auto-include updates when you save." }));
+      if (pendingSave) kids.push(el("span", { class: "muted", text: " 保存后会更新自动纳入结果。" }));
       body.appendChild(el("p", { class: "muted small scope-auto-note" }, kids));
     }
   }
@@ -280,23 +280,23 @@ export function renderScope(host, state, actions) {
   });
   if (orphans.length) {
     body.appendChild(el("div", { class: "scope-pinned" }, [
-      el("div", { class: "scope-section-title", text: "In scope" }),
+      el("div", { class: "scope-section-title", text: "已纳入作用范围" }),
       el("div", { class: "applist" }, orphans.map((entry) => {
         const isUid = UID_RE.test(entry);
         const { pkg, userId } = splitEntry(entry);
         // "Not installed" is a per-user answer: the app may well be on the device, just not in the
         // user this entry names, and saying so is the difference between a typo and a stale target.
-        const where = userId ? " for " + userOf({ userId }, users).name : "";
+        const where = userId ? "（用户：" + userOf({ userId }, users).name + "）" : "";
         return el("span", {
           class: "chip removable scope-chip" + (isUid ? " advanced" : " warn"),
           title: isUid
-            ? "Advanced: targets caller uid " + entry.slice(4)
-            : pkg + " is not installed" + (where || " on this device"),
+            ? "高级：指定调用方 UID " + entry.slice(4)
+            : pkg + " 未安装" + (where || "（本设备）"),
         }, [
           isUid ? el("span", { class: "chip-avatar-uid", "aria-hidden": "true", text: "#" }) : null,
           el("span", { class: "chip-text" + (isUid ? " mono" : ""), text: entry }),
-          el("span", { class: "chip-sub", text: isUid ? "advanced uid" : "not installed" + where }),
-          el("button", { type: "button", class: "chip-x", "aria-label": "Remove " + entry, text: "✕", onclick: () => actions.onToggleApp(entry) }),
+          el("span", { class: "chip-sub", text: isUid ? "高级 UID" : "未安装" + where }),
+          el("button", { type: "button", class: "chip-x", "aria-label": "移除 " + entry, text: "✕", onclick: () => actions.onToggleApp(entry) }),
         ]);
       })),
     ]));
@@ -327,9 +327,9 @@ export function renderScope(host, state, actions) {
   host.appendChild(el("div", { class: "drill-foot" }, [
     el("span", { class: "status" }, [
       el("span", { class: "dot ok" }),
-      el("span", { class: "muted small", text: apps.length + " selected" + (autoMineShown ? " · " + autoMineShown + " auto" : "") }),
+      el("span", { class: "muted small", text: apps.length + " 项已选" + (autoMineShown ? " · " + autoMineShown + " 个自动纳入" : "") }),
     ]),
-    el("button", { class: "btn primary", text: "Done", onclick: () => actions.onDone() }),
+    el("button", { class: "btn primary", text: "完成", onclick: () => actions.onDone() }),
   ]));
 
   restoreFocus(focus);
@@ -337,11 +337,11 @@ export function renderScope(host, state, actions) {
 
 // The empty-list line, worded for the active group so it never reads as an error.
 function emptyText(filter, total, q) {
-  if (!total) return "No apps found on the device.";
-  if (q) return "No apps match “" + q + "”.";
-  if (filter === "recent") return "No app has requested a key since boot yet.";
-  if (filter === "selected") return "Nothing in scope yet — tap an app to add it.";
-  return "No apps match.";
+  if (!total) return "未找到设备应用。";
+  if (q) return "没有应用匹配“" + q + "”.";
+  if (filter === "recent") return "本次启动后，尚无应用请求密钥。";
+  if (filter === "selected") return "暂无作用范围，点击应用可添加。";
+  return "没有匹配的应用。";
 }
 
 // Is this uid-row currently in scope — by one of its entries (each naming this row's user), or by
@@ -440,25 +440,25 @@ function scopeRow(row, ctx, actions) {
   if (showUser)
     pills.push(el("span", {
       class: "pill scope-user" + (user.managed ? " managed" : ""),
-      title: "Installed for user " + user.id + (user.managed ? " (work profile)" : ""),
+      title: "已安装于用户 " + user.id + (user.managed ? "（工作资料）" : ""),
       text: user.name,
     }));
-  if (lowUid) pills.push(el("span", { class: "pill warn scope-pill", text: "system uid" }));
-  if (claimedBy) pills.push(el("span", { class: "chip small scope-claimed", text: "in " + claimedBy }));
-  if (autoMine) pills.push(el("span", { class: "pill scope-auto", text: "auto" }));
-  if (autoOther) pills.push(el("span", { class: "chip small scope-claimed", text: "auto in " + autoBy }));
-  if (row.recent) pills.push(el("span", { class: "scope-recent-dot", title: "Requested a key since boot", "aria-label": "recent" }));
-  if (row.freq > 0) pills.push(el("span", { class: "scope-freq", title: row.freq + " key requests recorded", text: fmtFreq(row.freq) }));
+  if (lowUid) pills.push(el("span", { class: "pill warn scope-pill", text: "系统 UID" }));
+  if (claimedBy) pills.push(el("span", { class: "chip small scope-claimed", text: "所属方案：" + claimedBy }));
+  if (autoMine) pills.push(el("span", { class: "pill scope-auto", text: "自动纳入" }));
+  if (autoOther) pills.push(el("span", { class: "chip small scope-claimed", text: "自动纳入：" + autoBy }));
+  if (row.recent) pills.push(el("span", { class: "scope-recent-dot", title: "本次启动后请求过密钥", "aria-label": "最近使用" }));
+  if (row.freq > 0) pills.push(el("span", { class: "scope-freq", title: row.freq + " 次密钥请求已记录", text: fmtFreq(row.freq) }));
 
-  const cls = "scope-row" + (selected ? " selected" : autoMine ? " auto" : "") + (claimedBy ? " claimed" : "");
+  const cls = "scope-row" + (selected ? " 项已选" : autoMine ? " 个自动纳入" : "") + (claimedBy ? " claimed" : "");
 
   // Only an explicit claim by another profile disables a row. An auto row — mine or another's —
   // stays tappable: Scope.resolve excludes explicitly-named uids from auto-include, so an explicit
   // pick legally beats auto and the UI must not forbid what the daemon permits.
-  const title = claimedBy ? "Already targeted by profile " + claimedBy
-    : autoMine ? "In scope automatically — tap to pin it to " + profileName +
-      ". To exclude it, turn off Auto-include new apps."
-    : autoOther ? "Auto-included by profile " + autoBy + " — tap to pin it here instead."
+  const title = claimedBy ? "已由方案指定：" + claimedBy
+    : autoMine ? "已自动纳入，点击可固定到 " + profileName +
+      "。如需排除，请关闭“自动纳入新应用”。"
+    : autoOther ? "已被方案自动纳入：" + autoBy + "，点击可改为固定到此方案。"
     : label;
 
   return el("button", {
@@ -474,9 +474,9 @@ function scopeRow(row, ctx, actions) {
         el("span", { class: "scope-name", text: label }),
         ...pills,
       ]),
-      el("span", { class: "scope-pkg mono", text: pkgLine + "  ·  uid " + row.uid + (row.enabled === false ? "  ·  disabled" : "") }),
+      el("span", { class: "scope-pkg mono", text: pkgLine + "  ·  uid " + row.uid + (row.enabled === false ? "  ·  已停用" : "") }),
     ]),
-    el("span", { class: "scope-check" + (selected ? " on" : autoMine ? " auto" : ""), "aria-hidden": "true" }),
+    el("span", { class: "scope-check" + (selected ? " on" : autoMine ? " 个自动纳入" : ""), "aria-hidden": "true" }),
   ]);
 }
 

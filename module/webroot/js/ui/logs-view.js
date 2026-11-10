@@ -48,20 +48,20 @@ export function renderLogs(mount, state, actions) {
     clear(mount);
     shell = el("div", { class: "logs" }, [
       el("div", { class: "panel-head logs-head" }, [
-        el("h1", { class: "panel-title", text: "Logs" }),
+        el("h1", { class: "panel-title", text: "日志" }),
         el("div", { class: "logs-tools" }, [
-          el("button", { class: "btn small ghost", "data-act": "filter", type: "button" }, "Filter"),
-          el("button", { class: "btn small ghost", "data-act": "pause", type: "button" }, "Pause"),
-          el("button", { class: "btn small ghost", "data-act": "save", type: "button" }, "Save"),
+          el("button", { class: "btn small ghost", "data-act": "filter", type: "button" }, "筛选"),
+          el("button", { class: "btn small ghost", "data-act": "pause", type: "button" }, "暂停"),
+          el("button", { class: "btn small ghost", "data-act": "save", type: "button" }, "保存"),
         ]),
       ]),
       el("span", { class: "logs-msg", "data-role": "msg" }, ""),
       el("pre", { class: "logs-pane", tabindex: "0" }),
       el("div", { class: "logs-fabs" }, [
-        el("button", { class: "logs-fab", type: "button", "data-scroll": "top", "aria-label": "Scroll to top" }, [
+        el("button", { class: "logs-fab", type: "button", "data-scroll": "top", "aria-label": "滚动到顶部" }, [
           el("span", { class: "fab-chevron up", "aria-hidden": "true" }),
         ]),
-        el("button", { class: "logs-fab", type: "button", "data-scroll": "bottom", "aria-label": "Scroll to bottom" }, [
+        el("button", { class: "logs-fab", type: "button", "data-scroll": "bottom", "aria-label": "滚动到底部" }, [
           el("span", { class: "fab-chevron down", "aria-hidden": "true" }),
         ]),
       ]),
@@ -82,14 +82,14 @@ export function renderLogs(mount, state, actions) {
   const filter = state.filter || {};
   const filterBtn = shell.querySelector('[data-act="filter"]');
   filterBtn.classList.toggle("active", !!state.filterActive);
-  filterBtn.textContent = state.filterActive ? "Filter •" : "Filter";
+  filterBtn.textContent = state.filterActive ? "筛选 •" : "筛选";
 
   const pauseBtn = shell.querySelector('[data-act="pause"]');
-  pauseBtn.textContent = state.paused ? "Resume" : "Pause";
+  pauseBtn.textContent = state.paused ? "继续" : "暂停";
   pauseBtn.classList.toggle("active", state.paused);
 
   const msg = shell.querySelector('[data-role="msg"]');
-  msg.textContent = state.reachable ? "" : "daemon unreachable" + (state.error ? " — " + state.error : "");
+  msg.textContent = state.reachable ? "" : "无法连接守护进程" + (state.error ? " — " + state.error : "");
   msg.classList.toggle("off", !state.reachable);
   msg.hidden = state.reachable;
 
@@ -144,11 +144,11 @@ export function renderLogFilters(state, actions) {
   // F is a real filter: the collector captures FATAL device-wide regardless of tag, and the Rust
   // panic hook emits at that level, so "show me only what crashed" is one tap.
   const levels = ["V", "D", "I", "W", "E", "F"];
-  const seg = el("div", { class: "segmented", role: "group", "aria-label": "Minimum level" },
+  const seg = el("div", { class: "segmented", role: "group", "aria-label": "最低日志级别" },
     levels.map((lv) => el("button", {
       type: "button", class: "seg" + (lv === (filter.minLevel || "V") ? " on" : ""),
       "aria-pressed": lv === (filter.minLevel || "V") ? "true" : "false",
-      text: lv === "V" ? "All" : lv, onclick: () => actions.setLevel(lv),
+      text: lv === "V" ? "全部" : lv, onclick: () => actions.setLevel(lv),
     })));
 
   // Tag chips: one per distinct tag seen in the buffer. Toggling a chip selects or
@@ -158,32 +158,32 @@ export function renderLogFilters(state, actions) {
     ? el("div", { class: "chips" }, tags.map((t) => {
         const on = selected.has(t);
         return el("button", {
-          type: "button", class: "chip clickable" + (on ? " selected" : ""),
+          type: "button", class: "chip clickable" + (on ? " 项已选" : ""),
           "aria-pressed": on ? "true" : "false", text: t,
           onclick: () => actions.toggleTag(t),
         });
       }))
-    : el("span", { class: "muted small", text: "No tags seen yet." });
+    : el("span", { class: "muted small", text: "暂无日志标签。" });
 
   // Uncontrolled input: keystrokes update the controller's filter and re-render the
   // pane behind the sheet, but do NOT rebuild the sheet, so the caret stays put.
   const textInput = el("input", {
-    class: "input", type: "text", value: filter.text || "", placeholder: "substring in the message",
+    class: "input", type: "text", value: filter.text || "", placeholder: "输入日志内容中的关键词",
     autocapitalize: "off", autocorrect: "off", spellcheck: "false",
     oninput: (e) => actions.setText(e.target.value),
   });
 
   return el("div", {}, [
     el("div", { class: "sheet-head" }, [
-      el("h2", { text: "Filter logs" }),
-      el("button", { class: "iconbtn", type: "button", "aria-label": "Close", onclick: () => actions.close() }, [
+      el("h2", { text: "筛选日志" }),
+      el("button", { class: "iconbtn", type: "button", "aria-label": "关闭", onclick: () => actions.close() }, [
         el("span", { class: "x-mark", "aria-hidden": "true" }),
       ]),
     ]),
-    el("div", { class: "field" }, [el("span", { class: "field-label", text: "Minimum level" }), seg]),
-    el("div", { class: "field" }, [el("span", { class: "field-label", text: "Tags" }), tagChips]),
-    el("div", { class: "field" }, [el("span", { class: "field-label", text: "Message contains" }), textInput]),
-    el("button", { class: "btn ghost block sheet-submit", type: "button", text: "Reset filters", onclick: () => actions.reset() }),
+    el("div", { class: "field" }, [el("span", { class: "field-label", text: "最低日志级别" }), seg]),
+    el("div", { class: "field" }, [el("span", { class: "field-label", text: "标签" }), tagChips]),
+    el("div", { class: "field" }, [el("span", { class: "field-label", text: "内容包含" }), textInput]),
+    el("button", { class: "btn ghost block sheet-submit", type: "button", text: "重置筛选", onclick: () => actions.reset() }),
   ]);
 }
 
@@ -206,15 +206,15 @@ export function renderSaveSheet(state, actions) {
   });
   return el("div", {}, [
     el("div", { class: "sheet-head" }, [
-      el("h2", { text: "Save logs" }),
-      el("button", { class: "iconbtn", type: "button", "aria-label": "Close", onclick: () => actions.close() }, [
+      el("h2", { text: "保存日志" }),
+      el("button", { class: "iconbtn", type: "button", "aria-label": "关闭", onclick: () => actions.close() }, [
         el("span", { class: "x-mark", "aria-hidden": "true" }),
       ]),
     ]),
-    el("div", { class: "field" }, [el("span", { class: "field-label", text: "Folder" }), dirInput]),
-    el("div", { class: "field" }, [el("span", { class: "field-label", text: "Filename" }), nameInput]),
+    el("div", { class: "field" }, [el("span", { class: "field-label", text: "文件夹" }), dirInput]),
+    el("div", { class: "field" }, [el("span", { class: "field-label", text: "文件名" }), nameInput]),
     el("button", {
-      class: "btn primary block sheet-submit", type: "button", text: "Save",
+      class: "btn primary block sheet-submit", type: "button", text: "保存",
       onclick: () => actions.save(dirInput.value, nameInput.value),
     }),
   ]);

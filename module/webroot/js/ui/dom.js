@@ -148,7 +148,7 @@ export function disclosure(summary, body, { open = false, onToggle, id } = {}) {
 // guard's close callback resolves the promise with that outcome — one path for
 // every way to leave. Resolves true on confirm, false otherwise.
 export function confirmDialog(msg, opts = {}) {
-  const { confirmLabel = "Confirm", cancelLabel = "Cancel", danger = true } = opts;
+  const { confirmLabel = "确认", cancelLabel = "取消", danger = true } = opts;
   return new Promise((resolve) => {
     let outcome = false;
     const content = el("div", {}, [
@@ -158,7 +158,7 @@ export function confirmDialog(msg, opts = {}) {
         el("button", { class: "btn " + (danger ? "danger" : "primary"), text: confirmLabel, onclick: () => { outcome = true; handle.close(); } }),
       ]),
     ]);
-    const handle = openOverlay(content, { variant: "modal", label: "Confirm", onClose: () => resolve(outcome) });
+    const handle = openOverlay(content, { variant: "modal", label: "确认", onClose: () => resolve(outcome) });
   });
 }
 
@@ -166,7 +166,7 @@ export function confirmDialog(msg, opts = {}) {
 // implement). Same overlay/Back semantics as confirmDialog. Resolves the entered
 // string on OK/Enter, or null on Cancel / backdrop / Back.
 export function promptDialog(msg, initialValue = "", opts = {}) {
-  const { okLabel = "OK", placeholder = "" } = opts;
+  const { okLabel = "确定", placeholder = "" } = opts;
   return new Promise((resolve) => {
     let outcome = null;
     const input = el("input", {
@@ -179,7 +179,7 @@ export function promptDialog(msg, initialValue = "", opts = {}) {
       el("p", { class: "modal-msg", text: msg }),
       input,
       el("div", { class: "modal-actions" }, [
-        el("button", { class: "btn ghost", text: "Cancel", onclick: () => { outcome = null; handle.close(); } }),
+        el("button", { class: "btn ghost", text: "取消", onclick: () => { outcome = null; handle.close(); } }),
         el("button", { class: "btn primary", text: okLabel, onclick: submit }),
       ]),
     ]);

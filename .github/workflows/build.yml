@@ -12,7 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     # A "Release TEESimulator v…" commit is cut straight to a v* tag, which builds and publishes it.
     # Skip its redundant dev-push build entirely so the same code never builds (or canaries) twice.
-    if: ${{ !(github.event_name == 'push' && github.ref == 'refs/heads/dev' && startsWith(github.event.head_commit.message, 'Release TEESimulator v')) }}
+    # The Chinese fork has its own validation, build and publication workflow.
+    if: ${{ github.repository == 'JingMatrix/TEESimulator' && !(github.event_name == 'push' && github.ref == 'refs/heads/dev' && startsWith(github.event.head_commit.message, 'Release TEESimulator v')) }}
     permissions:
       contents: write # publish canary prereleases and tagged releases
     env:

@@ -29,7 +29,7 @@ export function renderRkpSection(host, state, actions) {
   if (!rows.length) return; // no RKP properties on this device => no section
 
   host.appendChild(el("div", { class: "panel-head" }, [
-    el("h1", { class: "panel-title", text: "Remote Key Provision" }),
+    el("h1", { class: "panel-title", text: "远程密钥配置（RKP）" }),
   ]));
 
   // These knobs almost never need touching: the module already handles remote provisioning so the
@@ -38,11 +38,11 @@ export function renderRkpSection(host, state, actions) {
   // still-present rkp_only prop left to delete.
   if (rows.some((r) => r.kind === "active")) {
     host.appendChild(el("div", { class: "card" }, [el("div", { class: "banner" }, [
-      el("div", { text: "You usually don't need to change these." }),
+      el("div", { text: "通常无需更改以下设置。" }),
       el("div", { class: "muted small", text:
-        "The module handles remote provisioning while these stay in place. Only if a device explicitly " +
-        "fails keybox attestation — a rare case — should you delete the rkp-only properties to force " +
-        "keystore2 onto the keybox. A deleted property is re-removed on every boot until you restore it." }),
+        "保留这些属性时，模块仍会处理远程密钥配置。仅当设备明确出现" +
+        "密钥箱证明失败（较少见）时，才需要删除 rkp-only 属性，使" +
+        "keystore2 使用密钥箱。被删除的属性会在每次启动时再次移除，直到手动恢复。" }),
     ])]));
   }
 
@@ -85,7 +85,7 @@ function toggleRow(r, actions) {
 function activeRow(r, actions) {
   const btn = el("button", {
     class: "rkp-del", type: "button",
-    title: "Delete " + r.name, "aria-label": "Delete " + r.name,
+    title: "删除 " + r.name, "aria-label": "删除 " + r.name,
     onclick: () => actions.del(r.name),
   }, [svgIcon(ICON_TRASH, { size: 18 })]);
   return el("div", { class: "field toggle-field rkp-row" }, [
@@ -105,20 +105,20 @@ function activeRow(r, actions) {
 // empty) there is no value to put back, so it only stops the re-removal.
 function deletedRow(r, actions) {
   const help = r.value
-    ? "Re-removed on every boot. Restore to set " + r.name + " back to \"" + r.value + "\"."
-    : "Re-removed on every boot. It was already unset when removed, so Restore just stops that.";
+    ? "每次启动时都会再次移除。恢复后将 " + r.name + " 设回“" + r.value + "”。"
+    : "每次启动时都会再次移除。删除时该属性已为空，因此恢复操作仅停止自动移除。";
   const btn = el("button", {
     class: "btn small ghost", type: "button",
-    title: "Restore " + r.name, "aria-label": "Restore " + r.name,
+    title: "恢复 " + r.name, "aria-label": "恢复 " + r.name,
     onclick: () => actions.restore(r.name),
-    text: "Restore",
+    text: "恢复",
   });
   return el("div", { class: "field toggle-field rkp-row deleted" }, [
     el("div", { class: "toggle-row" }, [
       el("div", { class: "toggle-main" }, [
         el("span", { class: "field-label", text: r.label }),
         el("span", { class: "field-help", text: help }),
-        el("span", { class: "chip warn small", text: "removed" }),
+        el("span", { class: "chip warn small", text: "已移除" }),
       ]),
       btn,
     ]),

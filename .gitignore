@@ -11,3 +11,6 @@ compile_commands.json
 /app/build/
 /stub/build/
 local.properties
+
+# Python maintenance checks
+__pycache__/

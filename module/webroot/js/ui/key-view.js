@@ -55,19 +55,19 @@ export function renderKeys(mount, state, handler) {
   // the Delete-selected action is a separate bar, so selecting keys can't shift the toggle.
   const scopeSlot = el("div", { class: "panel-actions" });
   mount.appendChild(el("div", { class: "panel-head" }, [
-    el("h1", { class: "panel-title", text: "Stored keys" }),
+    el("h1", { class: "panel-title", text: "已存储密钥" }),
     scopeSlot,
   ]));
 
   if (loading) {
-    mount.appendChild(el("div", { class: "card" }, [el("p", { class: "muted", text: "Loading…" })]));
+    mount.appendChild(el("div", { class: "card" }, [el("p", { class: "muted", text: "正在加载…" })]));
     return;
   }
 
   if (unavailable) {
     mount.appendChild(el("div", { class: "card" }, [el("div", { class: "banner" }, [
-      el("div", { text: "Daemon key capability unavailable." }),
-      el("div", { class: "muted small", text: "The daemon's admin endpoint isn't reachable yet; keys can't be listed." }),
+      el("div", { text: "守护进程的密钥管理功能不可用。" }),
+      el("div", { class: "muted small", text: "暂时无法连接守护进程管理接口，无法列出密钥。" }),
     ])]));
     return;
   }
@@ -75,11 +75,11 @@ export function renderKeys(mount, state, handler) {
   // Android 10/11 (or no keystore2 DB): there is no per-app database to inspect.
   if (apiLevel < 31 || !available) {
     mount.appendChild(el("div", { class: "card" }, [el("div", { class: "banner" }, [
-      el("div", { text: "Key listing is not available on this Android version." }),
+      el("div", { text: "当前 Android 版本不支持列出密钥。" }),
       el("div", { class: "muted small", text:
-        "On Android 10 and 11 there is no keystore2 database to inspect, and the keys the module " +
-        "generates are session-scoped — kept only until the keystore restarts (persistence there " +
-        "is not yet implemented)." +
+        "Android 10 和 11 没有可供查看的 keystore2 数据库。模块生成的密钥" +
+        "仅在当前会话内保留，keystore 重启后即失效（此版本尚未" +
+        "实现密钥持久化）。" +
         (apiLevel ? "  (Android API " + apiLevel + ")" : "") }),
     ])]));
     return;
@@ -87,7 +87,7 @@ export function renderKeys(mount, state, handler) {
 
   if (!keys.length) {
     mount.appendChild(el("div", { class: "card empty" }, [
-      el("p", { class: "muted", text: "This module hasn't minted any keys for the target apps yet." }),
+      el("p", { class: "muted", text: "模块尚未为目标应用生成密钥。" }),
     ]));
     return;
   }
@@ -98,7 +98,7 @@ export function renderKeys(mount, state, handler) {
   if (selected.size) {
     mount.appendChild(el("button", {
       class: "btn danger block", disabled: deleting,
-      text: deleting ? "Deleting…" : "Delete selected (" + selected.size + ")",
+      text: deleting ? "正在删除…" : "删除所选（" + selected.size + "）",
       onclick: () => handler("deleteSelected"),
     }));
   }
@@ -111,11 +111,11 @@ export function renderKeys(mount, state, handler) {
   const vendingUntouched = keys.filter(isUntouchedVendingSignKey);
   if (vendingUntouched.length) {
     mount.appendChild(el("div", { class: "card" }, [el("div", { class: "banner warn" }, [
-      el("div", { text: "Play Integrity may be outside TEESimulator's control." }),
+      el("div", { text: "Play Integrity 可能未受 TEESimulator 控制。" }),
       el("div", { class: "muted small", text:
-        "The Play Integrity key (com.android.vending, integrity.api.key.alias) is untouched, so it roots " +
-        "in the real TEE and Play Integrity can attest through it, bypassing the keybox. Switch to All and " +
-        "delete it to force attestation through a key this module controls." }),
+        "Play Integrity 密钥（com.android.vending，integrity.api.key.alias）未被修改，因此仍以" +
+        "真实 TEE 为根，可能绕过密钥箱进行证明。切换至“全部”后" +
+        "可删除此密钥，使下次证明使用模块控制的密钥。" }),
     ])]));
   }
 
@@ -145,8 +145,8 @@ export function renderKeys(mount, state, handler) {
   const listCard = el("div", { class: "card keypanel" });
   if (!shown.length) {
     const msg = hiddenReal
-      ? hiddenReal + " real device key(s) hidden — switch to All to show them."
-      : keys.length ? "No keys match “" + filter + "”." : "No keys.";
+      ? hiddenReal + " 个真实设备密钥已隐藏，切换至“全部”可查看。"
+      : keys.length ? "没有密钥匹配“" + filter + "”." : "暂无密钥。";
     listCard.appendChild(el("p", { class: "muted keyempty", text: msg }));
     mount.appendChild(listCard);
     restoreFocus();
@@ -161,11 +161,11 @@ export function renderKeys(mount, state, handler) {
   for (const k of shown) {
     const checked = selected.has(k.id);
     const check = el("input", { type: "checkbox", checked, onchange: () => handler("toggle", k.id) });
-    list.appendChild(el("li", { class: "keyrow" + (checked ? " selected" : "") }, [
+    list.appendChild(el("li", { class: "keyrow" + (checked ? " 项已选" : "") }, [
       el("label", { class: "keycheck" }, [check]),
       el("div", { class: "keymeta" }, [
         el("div", { class: "keyalias" }, [
-          el("span", { class: "mono", text: k.alias || "(no alias)" }),
+          el("span", { class: "mono", text: k.alias || "（无别名）" }),
           classChip(k, ctx),
           appChip(k, ctx),
           ...abnormalChips(k),
@@ -186,14 +186,14 @@ export function renderKeys(mount, state, handler) {
 function searchCard(filter, shown, menuOpen, handler) {
   const filterInput = el("input", {
     id: "keyfilter", class: "filter-input", type: "text", value: filter,
-    placeholder: "Filter — text, or tap a badge (class: app: purpose:)",
+    placeholder: "输入文字筛选，或点击标签（class: app: purpose:）",
     autocapitalize: "off", autocorrect: "off", spellcheck: "false",
     oninput: (e) => handler("filter", e.target.value),
   });
   const field = el("div", { class: "filter-field" }, [
     filterInput,
     el("button", {
-      class: "filter-menu-btn", type: "button", "aria-label": "Selection actions",
+      class: "filter-menu-btn", type: "button", "aria-label": "批量选择",
       "aria-expanded": menuOpen ? "true" : "false", onclick: () => handler("toggleMenu"),
     }, [el("span", { class: "sel-icon", "aria-hidden": "true" })]),
   ]);
@@ -202,10 +202,10 @@ function searchCard(filter, shown, menuOpen, handler) {
     const item = (label, action, arg) =>
       el("button", { type: "button", text: label, onclick: () => handler(action, arg) });
     field.appendChild(el("div", { class: "selmenu", role: "menu" }, [
-      item("Select filtered", "selectFiltered", shown.map((k) => k.id)),
-      item("Select all", "selectAll"),
-      item("Unselect all", "unselectAll"),
-      item("Inverse selection", "inverse"),
+      item("选择筛选结果", "selectFiltered", shown.map((k) => k.id)),
+      item("全选", "selectAll"),
+      item("取消全选", "unselectAll"),
+      item("反选", "inverse"),
     ]));
   }
 
@@ -226,17 +226,17 @@ function scopeControl(spoofedOnly, spoofedCount, hiddenReal, handler) {
       class: "seg" + (on ? " on" : ""), type: "button", text: label,
       "aria-pressed": on ? "true" : "false", title, onclick,
     });
-  const scope = el("div", { class: "segmented keyscope", role: "group", "aria-label": "Which keys to list" }, [
-    seg("Spoofed", spoofedOnly, "Only keys this module spoofed",
+  const scope = el("div", { class: "segmented keyscope", role: "group", "aria-label": "显示哪些密钥" }, [
+    seg("已处理", spoofedOnly, "仅显示模块处理过的密钥",
       () => { if (!spoofedOnly) handler("toggleSpoofed"); }),
-    seg("All", !spoofedOnly, "Include the apps' own real device keys",
+    seg("全部", !spoofedOnly, "同时显示应用原有的真实设备密钥",
       () => { if (spoofedOnly) handler("toggleSpoofed"); }),
   ]);
 
   const n = (count, one, many) => count + " " + (count === 1 ? one : many);
   const caption = spoofedOnly
-    ? (hiddenReal ? n(hiddenReal, "real key", "real keys") + " hidden" : "No real keys to hide")
-    : n(spoofedCount, "key", "keys") + " spoofed";
+    ? (hiddenReal ? n(hiddenReal, "个真实密钥", "个真实密钥") + "已隐藏" : "没有隐藏的真实密钥")
+    : n(spoofedCount, "个密钥", "个密钥") + "已处理";
 
   return el("div", { class: "keyscope-box" }, [
     scope,
@@ -294,7 +294,7 @@ function filterChip(token, extraCls, label, ctx) {
     type: "button",
     class: "chip chip-tap " + extraCls + (on ? " active" : ""),
     "aria-pressed": on ? "true" : "false",
-    title: (on ? "Clear filter " : "Filter by ") + token,
+    title: (on ? "清除筛选：" : "筛选：") + token,
     text: label,
     onclick: () => ctx.handler("toggleToken", token),
   });
@@ -316,7 +316,7 @@ function abnormalChips(k) {
 }
 
 function stateLabel(s) {
-  return ({ 0: "creating", 1: "live", 2: "orphaned" })[Number(s)] || ("state " + s);
+  return ({ 0: "创建中", 1: "可用", 2: "孤立" })[Number(s)] || ("状态 " + s);
 }
 
 // The four key classes the daemon reports, in the order spoofed-before-untouched, each with its
@@ -363,18 +363,22 @@ function isUntouchedVendingSignKey(k) {
 // The key's KeyPurpose labels (from the daemon's Tag::PURPOSE read) as small chips, with ATTEST_KEY
 // accented since an attestation-capable app key is notable. Each is a filter toggle on purpose:<label>.
 // No chips when the key reports no purposes.
+function purposeLabel(p) {
+  return ({ Encrypt: "加密", Decrypt: "解密", Sign: "签名", Verify: "验签", DeriveKey: "派生密钥", WrapKey: "封装密钥", AgreeKey: "密钥协商", AttestKey: "证明密钥" })[p] || p;
+}
+
 function purposeChips(k, ctx) {
   if (!Array.isArray(k.purposes) || !k.purposes.length) return [];
   return [el("div", { class: "keypurposes" }, k.purposes.map((p) =>
-    filterChip("purpose:" + String(p).toLowerCase(), "small purpose" + (p === "AttestKey" ? " attest" : ""), p, ctx)))];
+    filterChip("purpose:" + String(p).toLowerCase(), "small purpose" + (p === "AttestKey" ? " attest" : ""), purposeLabel(p), ctx)))];
 }
 
 function metaLines(k) {
   const lines = [];
-  if (k.keyAlgorithm) lines.push(metaLine("Algorithm", k.keyAlgorithm));
+  if (k.keyAlgorithm) lines.push(metaLine("算法", k.keyAlgorithm));
   // Only attributed keys carry a keybox; omit the line entirely for untouched real keys.
-  if (k.keybox) lines.push(metaLine("Keybox", k.keybox));
-  if (k.created) lines.push(metaLine("Created", fmtDate(k.created)));
+  if (k.keybox) lines.push(metaLine("密钥箱", k.keybox));
+  if (k.created) lines.push(metaLine("创建时间", fmtDate(k.created)));
   return lines;
 }
 

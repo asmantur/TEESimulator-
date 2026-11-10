@@ -62,9 +62,9 @@ export function create(mount) {
   async function deleteSelected() {
     const ids = [...state.selected];
     if (!ids.length) return;
-    const what = ids.length === 1 ? "this key" : ids.length + " keys";
+    const what = ids.length === 1 ? "此密钥" : ids.length + " 个密钥";
     const ok = await confirmDialog(
-      `Delete ${what} from keystore2? The owning app will re-create the key (and re-attest it) on next use.`,
+      `从 keystore2 删除${what}吗？所属应用将在下次使用时重新创建密钥并重新获取证明。`,
     );
     if (!ok) return;
     state.deleting = true;
@@ -73,9 +73,9 @@ export function create(mount) {
     try {
       const res = await keyAdmin("keysDbDelete", { ids });
       const n = (res && Number(res.deleted)) || 0;
-      toast(n ? `Deleted ${n} key${n === 1 ? "" : "s"}` : "No keys deleted");
+      toast(n ? `已删除 ${n} 个密钥` : "未删除任何密钥");
     } catch (e) {
-      toast("Delete failed: " + (e && e.message ? e.message : String(e)));
+      toast("删除失败：" + (e && e.message ? e.message : String(e)));
     }
     state.deleting = false;
     state.selected = new Set();

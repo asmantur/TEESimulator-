@@ -1,0 +1,23 @@
+[
+  "Attestation",
+  "Keybox",
+  "KeyMint",
+  "Keymaster",
+  "Hook",
+  "TEE",
+  "RKP",
+  "Software",
+  "TrustedEnvironment",
+  "StrongBox",
+  "Verified",
+  "SelfSigned",
+  "Unverified",
+  "Failed",
+  "Generated",
+  "Delegated",
+  "Patched",
+  "Untouched",
+  "required",
+  "supplement",
+  "synthesized"
+]

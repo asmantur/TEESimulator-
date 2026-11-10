@@ -21,13 +21,13 @@ import { getPath } from "../domain/path.js";
 // the editor stays concise — only the essentials (keybox, operation mode, apps) are open,
 // with the patch/OS levels and the many device-identity fields tucked away until needed.
 const GROUPS = [
-  { id: "attestation", title: "Attestation" },
-  { id: "levels", title: "Patch & OS levels", fold: true },
+  { id: "attestation", title: "密钥证明" },
+  { id: "levels", title: "补丁与系统版本", fold: true },
   {
-    id: "identity", title: "Device identity", fold: true,
-    note: "Each overrides one attested device id. Leave a field empty to use the value harvested from the device.",
+    id: "identity", title: "设备标识", fold: true,
+    note: "每项可覆盖证明中的一个设备标识。留空则使用从设备采集到的值。",
   },
-  { id: "apps", title: "Target apps" },
+  { id: "apps", title: "目标应用" },
 ];
 
 const fieldId = (profile, key) => `f__${profile}__${key}`;
@@ -42,7 +42,7 @@ function foldSummary(group, fields, profile, hasErrors) {
       const v = getPath(profile, f.path);
       return n + (v != null && v !== "" ? 1 : 0);
     }, 0);
-    nodes.push(el("span", { class: "count-tag", text: setCount ? setCount + " set" : "optional" }));
+    nodes.push(el("span", { class: "count-tag", text: setCount ? setCount + " 项已设置" : "可选" }));
   }
   if (hasErrors) nodes.push(el("span", { class: "chip warn small", text: "!" }));
   return nodes;
@@ -60,11 +60,11 @@ function resolveHint(d, value, resolved) {
     const has = rv != null && rv !== "";
     return el("div", {
       class: "field-help resolve-hint" + (has ? "" : " missing"),
-      text: has ? "harvested → " + rv : "not harvested — this tag will be omitted",
+      text: has ? "设备采集值 → " + rv : "未采集到此值，将省略该字段",
     });
   }
   if (v === "system_property") {
-    return el("div", { class: "field-help resolve-hint", text: "from the device build property; omitted if unset" });
+    return el("div", { class: "field-help resolve-hint", text: "取自设备的系统构建属性；未设置时省略" });
   }
   return null;
 }
@@ -85,8 +85,8 @@ export function renderProfileList(mount, state, actions) {
   }
 
   mount.appendChild(el("div", { class: "panel-head" }, [
-    el("h1", { class: "panel-title", text: "Profiles" }),
-    el("button", { class: "btn primary", text: "Add profile", onclick: () => actions.onAdd() }),
+    el("h1", { class: "panel-title", text: "配置方案" }),
+    el("button", { class: "btn primary", text: "添加方案", onclick: () => actions.onAdd() }),
   ]));
 
   if (global.length) {
@@ -95,7 +95,7 @@ export function renderProfileList(mount, state, actions) {
 
   if (!names.length) {
     mount.appendChild(el("div", { class: "card empty" },
-      [el("p", { class: "muted", text: "No profiles yet. Add one to start attesting for apps." })]));
+      [el("p", { class: "muted", text: "暂无配置方案。添加方案后，可为指定应用提供密钥证明。" })]));
     return;
   }
 
@@ -108,10 +108,10 @@ export function renderProfileList(mount, state, actions) {
     // auto chip is the rest of the truth, and this is the resting screen where that lie was loudest.
     const autoN = autoCounts.get(name) || 0;
     const chips = el("span", { class: "chips" }, [
-      el("span", { class: "chip", text: getPath(profile, ["keybox"]) || "no keybox" }),
-      el("span", { class: "chip", text: appCount + (appCount === 1 ? " app" : " apps") }),
-      autoN ? el("span", { class: "chip", text: autoN + " auto" }) : null,
-      errorCount.get(name) ? el("span", { class: "chip warn", text: errorCount.get(name) + " to fix" }) : null,
+      el("span", { class: "chip", text: getPath(profile, ["keybox"]) || "未设置密钥箱" }),
+      el("span", { class: "chip", text: appCount + (appCount === 1 ? " 个应用" : " 个应用") }),
+      autoN ? el("span", { class: "chip", text: autoN + " 个自动纳入" }) : null,
+      errorCount.get(name) ? el("span", { class: "chip warn", text: errorCount.get(name) + " 项待修正" }) : null,
     ]);
     list.appendChild(el("button", { class: "list-row", type: "button", onclick: () => actions.onOpen(name) }, [
       el("span", { class: "list-main" }, [
@@ -128,9 +128,9 @@ export function renderProfileList(mount, state, actions) {
   if (dirty) {
     mount.appendChild(el("div", { class: "card save-bar" }, [
       errors.length
-        ? el("span", { class: "muted small", text: errors.length + " issue" + (errors.length === 1 ? "" : "s") + " to fix before saving" })
-        : el("span", { class: "status" }, [el("span", { class: "dot off" }), el("span", { class: "muted small", text: "Unsaved changes" })]),
-      el("button", { class: "btn primary", text: "Save", disabled: errors.length > 0, onclick: () => actions.onSave() }),
+        ? el("span", { class: "muted small", text: "保存前需修正 " + errors.length + " 项问题" })
+        : el("span", { class: "status" }, [el("span", { class: "dot off" }), el("span", { class: "muted small", text: "有未保存的更改" })]),
+      el("button", { class: "btn primary", text: "保存", disabled: errors.length > 0, onclick: () => actions.onSave() }),
     ]));
   }
 }
@@ -156,10 +156,10 @@ export function renderProfileEditor(host, state, actions) {
 
   // Header: a back control that closes the drill-in, and the section title.
   host.appendChild(el("div", { class: "drill-head" }, [
-    el("button", { class: "iconbtn", type: "button", "aria-label": "Back to profiles", onclick: () => actions.onClose() }, [
+    el("button", { class: "iconbtn", type: "button", "aria-label": "返回配置方案", onclick: () => actions.onClose() }, [
       el("span", { class: "chevron-left", "aria-hidden": "true" }),
     ]),
-    el("h1", { class: "drill-title", text: "Edit profile", tabindex: "-1" }),
+    el("h1", { class: "drill-title", text: "编辑方案", tabindex: "-1" }),
   ]));
 
   const body = el("div", { class: "drill-body" });
@@ -178,7 +178,7 @@ export function renderProfileEditor(host, state, actions) {
   renameInput.addEventListener("change", doRename);
   renameInput.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doRename(); } });
   const renameField = el("div", { class: "field" }, [
-    el("label", { class: "field-label", for: renameId(name), text: "Profile name" }),
+    el("label", { class: "field-label", for: renameId(name), text: "方案名称" }),
     renameInput,
   ]);
   for (const m of errFor("__name")) renameField.appendChild(el("div", { class: "err", text: m }));
@@ -187,9 +187,9 @@ export function renderProfileEditor(host, state, actions) {
   // One line for the whole editor: an empty patch / OS / identity field falls back to the
   // value harvested from this device, shown on the System screen.
   body.appendChild(el("p", { class: "field-help editor-note" }, [
-    "Leave a patch, OS, or identity field empty to use the value ",
-    el("button", { type: "button", class: "linklike", onclick: () => actions.gotoSystem() }, "harvested from this device"),
-    ".",
+    "补丁、系统版本或设备标识留空时，将使用",
+    el("button", { type: "button", class: "linklike", onclick: () => actions.gotoSystem() }, "从本设备采集到的值"),
+    "。",
   ]));
 
   // The attestation + apps groups render as open fieldsets; identity collapses.
@@ -246,7 +246,7 @@ export function renderProfileEditor(host, state, actions) {
   }
 
   body.appendChild(el("button", {
-    class: "btn danger ghost block", type: "button", text: "Remove profile",
+    class: "btn danger ghost block", type: "button", text: "删除方案",
     onclick: () => actions.onRemove(name),
   }));
 
@@ -255,9 +255,9 @@ export function renderProfileEditor(host, state, actions) {
   // Sticky save bar pinned to the bottom of the drill-in.
   host.appendChild(el("div", { class: "drill-foot" }, [
     errors.length
-      ? el("span", { class: "muted small", text: errors.length + " issue" + (errors.length === 1 ? "" : "s") + " to fix" })
-      : el("span", { class: "status" }, [el("span", { class: "dot ok" }), el("span", { class: "muted small", text: "Ready to save" })]),
-    el("button", { class: "btn primary", text: "Save", disabled: errors.length > 0, onclick: () => actions.onSave() }),
+      ? el("span", { class: "muted small", text: errors.length + " 项问题待修正" })
+      : el("span", { class: "status" }, [el("span", { class: "dot ok" }), el("span", { class: "muted small", text: "可以保存" })]),
+    el("button", { class: "btn primary", text: "保存", disabled: errors.length > 0, onclick: () => actions.onSave() }),
   ]));
 
   restoreFocus(focus);

@@ -47,7 +47,7 @@ test("emptyProfile JSON round-trips to an equal object", () => {
 test("version must be 1", () => {
   const r = validateConfig({ version: 2, profiles: { p: validProfile() } });
   assert.equal(r.ok, false);
-  assert.ok(r.errors.some((e) => /version/i.test(e.msg)));
+  assert.ok(r.errors.some((e) => e.profile == null && e.field == null));
 });
 
 test("a non-object config is rejected, not thrown", () => {
@@ -113,14 +113,14 @@ test("a package in two profiles is a hard error on BOTH", () => {
     b: validProfile(["com.dup", "com.b"]),
   }));
   assert.equal(r.ok, false);
-  const dupErrs = r.errors.filter((e) => e.field === "apps" && /unique/i.test(e.msg));
+  const dupErrs = r.errors.filter((e) => e.field === "apps" && e.msg.includes("com.dup"));
   assert.ok(dupErrs.some((e) => e.profile === "a"));
   assert.ok(dupErrs.some((e) => e.profile === "b"));
 });
 
 test("a package listed twice in ONE profile is not a cross-profile duplicate", () => {
   const r = validateConfig(configWith({ a: validProfile(["com.dup", "com.dup", "com.a"]) }));
-  const dupErrs = r.errors.filter((e) => e.field === "apps" && /unique/i.test(e.msg));
+  const dupErrs = r.errors.filter((e) => e.field === "apps" && e.msg.includes("com.dup"));
   assert.equal(dupErrs.length, 0, JSON.stringify(dupErrs));
   assert.equal(r.ok, true, JSON.stringify(r.errors));
 });
@@ -162,7 +162,8 @@ test("the same package in two users may live in two profiles", () => {
 test("the same pkg@user in two profiles is still a duplicate claim", () => {
   const r = validateConfig(configWith({ a: validProfile(["com.dual@10"]), b: validProfile(["com.dual@10"]) }));
   assert.equal(r.ok, false);
-  assert.ok(r.errors.some((e) => e.field === "apps" && /unique/i.test(e.msg)));
+  const owners = r.errors.filter((e) => e.field === "apps" && e.msg.includes("com.dual@10"));
+  assert.deepEqual(owners.map((e) => e.profile).sort(), ["a", "b"]);
 });
 
 test("splitEntry / entryToken round-trip an entry", () => {

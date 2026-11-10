@@ -1,0 +1,21 @@
+name: 汉化改动检查
+
+on:
+  pull_request:
+    branches: [dev]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - run: npm ci --prefix scripts/localization --ignore-scripts --no-audit --no-fund
+      - run: node scripts/localization/check.mjs
+      - run: node --test scripts/localization/check.test.mjs module/webroot/tests/domain.test.mjs
+      - run: python3 -m unittest discover -s scripts -p 'test_*.py'

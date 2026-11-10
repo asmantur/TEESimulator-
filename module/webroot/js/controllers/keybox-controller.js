@@ -61,7 +61,7 @@ export function create(mount) {
     error = null;
     sheetHost = document.createElement("div");
     sheetHost.appendChild(renderKeyboxImport({ importName, importContent, error }, actions));
-    sheetOverlay = openSheet(sheetHost, { label: "Import keybox", onClose: () => { sheetHost = null; sheetOverlay = null; } });
+    sheetOverlay = openSheet(sheetHost, { label: "导入密钥箱", onClose: () => { sheetHost = null; sheetOverlay = null; } });
   }
 
   function closeImport() {
@@ -75,14 +75,14 @@ export function create(mount) {
     try {
       data = await keyAdmin("keyboxInspect", { name });
     } catch (e) {
-      toast("Inspect failed: " + (e && e.message ? e.message : String(e)));
+      toast("查看失败：" + (e && e.message ? e.message : String(e)));
       return;
     }
     const content = renderKeyboxInspect({ name, data }, { close: () => closeInspect() });
     const body = content.querySelector(".drill-body");
     let detachPtr = null;
     inspectOverlay = openOverlay(content, {
-      variant: "panel", label: "Keybox",
+      variant: "panel", label: "密钥箱",
       onClose: () => { if (detachPtr) detachPtr(); detachPtr = null; inspectOverlay = null; },
     });
     // Pull down on the detail page to re-fetch Google's revocation list and re-verify in place.
@@ -98,7 +98,7 @@ export function create(mount) {
     try {
       data = await keyAdmin("keyboxInspect", { name, refresh: true });
     } catch (e) {
-      toast("Refresh failed: " + (e && e.message ? e.message : String(e)));
+      toast("刷新失败：" + (e && e.message ? e.message : String(e)));
       return;
     }
     fillKeyboxInspect(body, { name, data });
@@ -123,7 +123,7 @@ export function create(mount) {
         error = null;
         renderSheet();
       };
-      reader.onerror = () => { error = "Could not read that file."; renderSheet(); };
+      reader.onerror = () => { error = "无法读取此文件。"; renderSheet(); };
       reader.readAsText(file);
     },
 
@@ -135,34 +135,34 @@ export function create(mount) {
     async import() {
       let r = await importKeybox(importName, importContent, files);
       if (!r.ok && r.exists) {
-        if (!(await confirmDialog(`Overwrite existing keybox "${r.name}"?`))) return;
+        if (!(await confirmDialog(`覆盖已有的密钥箱“${r.name}”？`))) return;
         r = await importKeybox(importName, importContent, files, true);
       }
       if (!r.ok) {
         error = r.error;
-        toast("Import failed: " + (r.error || "unknown error"));
+        toast("导入失败：" + (r.error || "未知错误"));
         renderSheet();
         return;
       }
-      toast("Imported " + r.name);
+      toast("已导入 " + r.name);
       closeImport();
       return refresh();
     },
 
     async rename(name) {
-      const next = await promptDialog(`Rename "${name}" to:`, name, { okLabel: "Rename" });
+      const next = await promptDialog(`将“${name}”重命名为：`, name, { okLabel: "重命名" });
       if (next == null) return; // cancelled
       const r = await renameKeybox(name, next, files);
-      if (!r.ok) { toast("Rename failed: " + (r.error || "unknown error")); return; }
-      toast("Renamed to " + r.name);
+      if (!r.ok) { toast("重命名失败：" + (r.error || "未知错误")); return; }
+      toast("已重命名为 " + r.name);
       return refresh();
     },
 
     async delete(name) {
-      if (!(await confirmDialog(`Delete keybox "${name}"? This cannot be undone.`))) return;
+      if (!(await confirmDialog(`删除密钥箱“${name}”？此操作无法撤销。`))) return;
       const r = await deleteKeybox(name);
-      if (!r.ok) { toast("Delete failed: " + (r.error || "unknown error")); return; }
-      toast("Deleted " + (r.name || name));
+      if (!r.ok) { toast("删除失败：" + (r.error || "未知错误")); return; }
+      toast("已删除 " + (r.name || name));
       return refresh();
     },
   };
@@ -178,14 +178,14 @@ export function create(mount) {
       // Delete an rkp_only prop. refreshRkp re-reads: on success the prop is gone and the row turns
       // into a Restore control; on failure the trash row stays. The daemon owns the live delete.
       const r = await deleteRkpProp(name);
-      if (!r.ok) toast("Delete failed: " + (r.error || "unknown error"));
+      if (!r.ok) toast("删除失败：" + (r.error || "未知错误"));
       return refreshRkp();
     },
     async restore(name) {
       // Put a deleted rkp_only prop back. refreshRkp re-reads: on success the Restore row turns back
       // into a trash row; on failure the Restore control stays.
       const r = await restoreRkpProp(name);
-      if (!r.ok) toast("Restore failed: " + (r.error || "unknown error"));
+      if (!r.ok) toast("恢复失败：" + (r.error || "未知错误"));
       return refreshRkp();
     },
   };

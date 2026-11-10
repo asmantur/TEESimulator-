@@ -14,10 +14,10 @@ export function validateProfile(name, profile) {
   const errors = [];
 
   if (!PROFILE_RE.test(name)) {
-    errors.push({ field: "__name", msg: "Name must be 1-32 chars: letters, digits, - or _." });
+    errors.push({ field: "__name", msg: "名称须为 1–32 个字符，仅支持英文字母、数字、- 或 _。" });
   }
   if (!profile || typeof profile !== "object") {
-    errors.push({ field: "__name", msg: "Profile is not an object." });
+    errors.push({ field: "__name", msg: "方案必须为对象。" });
     return errors;
   }
 
@@ -31,13 +31,13 @@ export function validateProfile(name, profile) {
       // every unclaimed user app, so there is nothing to hand-pick).
       const autoIncludes = profile.autoIncludeNewApps === true;
       if (f.required && apps.length < 1 && !autoIncludes) {
-        errors.push({ field: f.key, msg: "At least one app is required (or turn on Auto-include new apps)." });
+        errors.push({ field: f.key, msg: "请至少选择一个应用，或开启“自动纳入新应用”。" });
       }
       // Each entry is a package name, a package@user name, OR a raw uid: token (APP_ENTRY_RE),
       // not package-only.
       for (const entry of apps) {
         if (typeof entry !== "string" || !APP_ENTRY_RE.test(entry)) {
-          errors.push({ field: f.key, msg: `Invalid app entry: ${entry}` });
+          errors.push({ field: f.key, msg: `应用条目无效：${entry}` });
         }
       }
       continue;
@@ -45,7 +45,7 @@ export function validateProfile(name, profile) {
 
     if (f.key === "keybox") {
       if (!value || !KEYBOX_RE.test(value)) {
-        errors.push({ field: f.key, msg: "A keybox ending in .xml is required." });
+        errors.push({ field: f.key, msg: "请指定以 .xml 结尾的密钥箱文件。" });
       }
       continue;
     }
@@ -58,10 +58,10 @@ export function validateProfile(name, profile) {
     // Generic scalar. Format is checked only when a value is present, so an
     // optional field left blank is fine; presence is a separate, explicit flag.
     if (f.re && value !== undefined && value !== "" && !f.re.test(value)) {
-      errors.push({ field: f.key, msg: `Invalid ${f.label.toLowerCase()}: ${value}` });
+      errors.push({ field: f.key, msg: `${f.label}无效：${value}` });
     }
     if (f.required && (value === undefined || value === "")) {
-      errors.push({ field: f.key, msg: `${f.label} is required.` });
+      errors.push({ field: f.key, msg: `请填写${f.label}。` });
     }
   }
 
@@ -75,14 +75,14 @@ export function validateConfig(config) {
   const errors = [];
 
   if (!config || typeof config !== "object" || Array.isArray(config)) {
-    return { ok: false, errors: [{ profile: null, field: null, msg: "Config must be an object." }] };
+    return { ok: false, errors: [{ profile: null, field: null, msg: "配置必须为对象。" }] };
   }
   if (config.version !== VERSION) {
-    errors.push({ profile: null, field: null, msg: `Unsupported version (expected ${VERSION}).` });
+    errors.push({ profile: null, field: null, msg: `不支持此版本，需要版本 ${VERSION}。` });
   }
   const profiles = config.profiles;
   if (!profiles || typeof profiles !== "object" || Array.isArray(profiles)) {
-    errors.push({ profile: null, field: null, msg: "Config.profiles must be an object." });
+    errors.push({ profile: null, field: null, msg: "配置中的 profiles 必须为对象。" });
     return { ok: errors.length === 0, errors };
   }
 
@@ -109,7 +109,7 @@ export function validateConfig(config) {
       for (const name of claimants) {
         errors.push({
           profile: name, field: "apps",
-          msg: `App entry ${pkg} is claimed by ${claimants.length} profiles; it must be unique.`,
+          msg: `应用条目 ${pkg} 同时属于 ${claimants.length} 个方案，每个条目只能属于一个方案。`,
         });
       }
     }
@@ -124,7 +124,7 @@ export function validateConfig(config) {
     for (const name of autoProfiles) {
       errors.push({
         profile: name, field: "autoIncludeNewApps",
-        msg: `Only one profile may auto-include new apps; ${autoProfiles.length} do.`,
+        msg: `仅允许一个方案自动纳入新应用，目前有 ${autoProfiles.length} 个方案启用了此功能。`,
       });
     }
   }

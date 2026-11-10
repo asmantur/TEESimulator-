@@ -105,8 +105,9 @@ function patchWidget(d, value, onChange, ctx) {
 // the calendar rather than freezing to the month it was picked. Early in a month, before
 // the 5th, it resolves to the previous month instead -- never to a day still ahead.
 function resolvePick(token) {
-  if (token === "@month05") return { label: "YYYY-MM-05", value: "YYYY-MM-05" };
-  return { label: token, value: token };
+  if (token === "@month05") return { label: "每月 5 日（YYYY-MM-05）", value: "YYYY-MM-05" };
+  const labels = { system_property: "系统属性", today: "当前月份", no: "不提供", harvested: "设备采集值" };
+  return { label: labels[token] || token, value: token };
 }
 
 function selectWidget(d, value, onChange, ctx) {
@@ -114,7 +115,7 @@ function selectWidget(d, value, onChange, ctx) {
     id: ctx.id, class: "input",
     onchange: (e) => onChange(d.path, e.target.value),
   }, (d.options || []).map((opt) =>
-    el("option", { value: opt, selected: opt === value, text: opt })));
+    el("option", { value: opt, selected: opt === value, text: ({ patch: "patch（保留硬件密钥）", generation: "generation（软件生成）" })[opt] || opt })));
 }
 
 function keyboxWidget(d, value, onChange, ctx) {
@@ -124,13 +125,13 @@ function keyboxWidget(d, value, onChange, ctx) {
   if (value && !files.includes(value)) files.push(value);
   if (files.length === 0) {
     return el("select", { id: ctx.id, class: "input", disabled: true },
-      [el("option", { text: "no keybox files found" })]);
+      [el("option", { text: "未找到密钥箱文件" })]);
   }
   return el("select", {
     id: ctx.id, class: "input",
     onchange: (e) => onChange(d.path, e.target.value),
   }, files.map((f) =>
-    el("option", { value: f, selected: f === value, text: f + ((ctx.keyboxFiles || []).includes(f) ? "" : " (missing)") })));
+    el("option", { value: f, selected: f === value, text: f + ((ctx.keyboxFiles || []).includes(f) ? "" : "（文件缺失）") })));
 }
 
 function applistWidget(d, value, ctx) {
@@ -138,10 +139,10 @@ function applistWidget(d, value, ctx) {
   const chips = el("div", { class: "applist" }, apps.length
     ? apps.map((pkg) => el("span", { class: "chip removable" }, [
         el("span", { class: "chip-text", text: pkg }),
-        el("button", { type: "button", class: "chip-x", "aria-label": "Remove " + pkg, text: "✕",
+        el("button", { type: "button", class: "chip-x", "aria-label": "移除 " + pkg, text: "✕",
           onclick: () => ctx.removeApp(pkg) }),
       ]))
-    : [el("span", { class: "muted small", text: "No apps yet." })]);
+    : [el("span", { class: "muted small", text: "暂无应用。" })]);
 
   const input = el("input", {
     id: ctx.id, class: "input", type: "text", placeholder: "com.example.app",
@@ -156,7 +157,7 @@ function applistWidget(d, value, ctx) {
   };
   input.addEventListener("input", () => input.classList.toggle("invalid", input.value.trim() !== "" && !d.re.test(input.value.trim())));
   input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } });
-  const add = el("button", { type: "button", class: "btn", text: "Add", onclick: submit });
+  const add = el("button", { type: "button", class: "btn", text: "添加", onclick: submit });
 
   return el("div", {}, [chips, el("div", { class: "add-row" }, [input, add])]);
 }
@@ -183,7 +184,7 @@ function toggleField(d, value, onChange, ctx) {
     input,
     el("span", { class: "switch-track", "aria-hidden": "true" }, [el("span", { class: "switch-thumb" })]),
   ]);
-  const sub = locked ? "Used by profile “" + ctx.autoTakenBy + "”" : d.help;
+  const sub = locked ? "已由方案“" + ctx.autoTakenBy + "”" : d.help;
   return el("div", { class: "field toggle-field" }, [
     el("div", { class: "toggle-row" }, [
       el("label", { class: "toggle-main", for: ctx.id }, [
@@ -213,11 +214,11 @@ function scopeWidget(d, value, ctx) {
   // auto-includes. Add the daemon's auto count beside it — otherwise this face says "2 apps" for a
   // profile being attested for eleven.
   const autoCount = Number(ctx.autoCount) || 0;
-  const countText = (apps.length ? apps.length + (apps.length === 1 ? " app" : " apps") : "No apps") +
-    (autoCount ? " · " + autoCount + " auto" : "");
+  const countText = (apps.length ? apps.length + (apps.length === 1 ? " 个应用" : " 个应用") : "暂无应用") +
+    (autoCount ? " · " + autoCount + " 个自动纳入" : "");
   const header = el("div", { class: "scope-field-head" }, [
     el("span", { class: "scope-field-count", text: countText }),
-    el("button", { id: ctx.id, type: "button", class: "btn primary small", text: "Configure scope →", onclick: () => ctx.openScope && ctx.openScope() }),
+    el("button", { id: ctx.id, type: "button", class: "btn primary small", text: "设置作用范围 →", onclick: () => ctx.openScope && ctx.openScope() }),
   ]);
 
   const kids = [header];
@@ -233,16 +234,16 @@ function scopeWidget(d, value, ctx) {
       const userId = isUid ? 0 : splitEntry(entry).userId;
       return el("span", {
         class: "chip scope-chip" + (isUid ? " advanced" : "") + (missing ? " warn" : ""),
-        title: isUid ? "Advanced: targets caller uid " + entry.slice(4)
-          : missing ? entry + " is not installed (a name-match applies if it installs later)" : entry,
+        title: isUid ? "高级：指定调用方 UID " + entry.slice(4)
+          : missing ? entry + " 未安装（之后安装时仍可按包名匹配）" : entry,
       }, [
         (isUid || missing) ? el("span", { class: "scope-chip-dot", "aria-hidden": "true" }) : null,
         el("span", { class: "chip-text" + (isUid ? " mono" : ""), text: label }),
-        userId ? el("span", { class: "chip-sub", text: "user " + userId }) : null,
+        userId ? el("span", { class: "chip-sub", text: "用户 " + userId }) : null,
       ]);
     });
     if (apps.length > SCOPE_PREVIEW_MAX) {
-      chips.push(el("span", { class: "chip scope-chip more", text: "+" + (apps.length - SCOPE_PREVIEW_MAX) + " more" }));
+      chips.push(el("span", { class: "chip scope-chip more", text: "+" + (apps.length - SCOPE_PREVIEW_MAX) + " 项更多" }));
     }
     kids.push(el("div", { class: "applist scope-preview" }, chips));
   }
@@ -252,9 +253,8 @@ function scopeWidget(d, value, ctx) {
   // count so it stops claiming apps are added "automatically" when there are none.
   if (ctx.autoInclude) {
     kids.push(el("span", { class: "muted small", text: autoCount
-      ? "Auto-include on — " + autoCount + (autoCount === 1 ? " app" : " apps") + " installed since TEESimulator started " +
-        (autoCount === 1 ? "is" : "are") + " also in scope."
-      : "Auto-include on — no new apps in scope yet." }));
+      ? "已启用自动纳入：TEESimulator 建立基准后新安装的 " + autoCount + " 个应用也在作用范围内。"
+      : "已启用自动纳入，暂无符合条件的新应用。" }));
   }
 
   return el("div", { class: "scope-field" }, kids);

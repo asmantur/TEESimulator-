@@ -137,7 +137,7 @@ async function request(method, path, body) {
     const r = await run(argv);
     if (r.errno === 1 || r.errno === -1) {
       console.error("[keyAdmin] ✗ %s %s transport error in %dms: %o", method, path, Date.now() - t0, r.stderr);
-      throw new Error("daemon unreachable" + (r.stderr ? ": " + String(r.stderr).trim() : ""));
+      throw new Error("无法连接守护进程" + (r.stderr ? ": " + String(r.stderr).trim() : ""));
     }
     // Response body — a distinct name from the `body` REQUEST parameter above (re-declaring a parameter
     // with `let` is a SyntaxError that would break this whole module and, with it, the entire WebUI).
@@ -150,7 +150,7 @@ async function request(method, path, body) {
       // The daemon reports failures two ways: key ops use { ok:false, error }, while the canary
       // endpoints use { ok:false, message }. Surface either so a failed canaryInstall keeps the
       // daemon's human-readable reason.
-      throw new Error((data && (data.error || data.message)) || ("helper errno " + r.errno));
+      throw new Error((data && (data.error || data.message)) || ("辅助程序错误码 " + r.errno));
     }
     return data;
   } finally {
@@ -264,6 +264,6 @@ export async function keyAdmin(action, args = {}) {
     case "canaryInstall":
       return request("POST", "/canary/install" + canaryInstallQuery(args));
     default:
-      throw new Error("unknown keyAdmin action: " + action);
+      throw new Error("未知 keyAdmin 操作：" + action);
   }
 }

@@ -19,22 +19,22 @@ export const RKP_PROPS = [
   {
     key: "teeRkpOnly",
     name: "remote_provisioning.tee.rkp_only",
-    label: "TEE RKP-only",
-    help: "When present, the TEE level provisions attestation keys only via RKP, with no batch-key fallback. Delete it to let keystore2 fall back to the keybox.",
+    label: "TEE 仅使用 RKP",
+    help: "存在此属性时，TEE 仅通过 RKP 配置证明密钥，不回退到批量密钥。删除后允许 keystore2 回退至密钥箱。",
     kind: "deletable",
   },
   {
     key: "strongboxRkpOnly",
     name: "remote_provisioning.strongbox.rkp_only",
-    label: "StrongBox RKP-only",
-    help: "When present, the StrongBox level provisions attestation keys only via RKP, with no batch-key fallback. Delete it to let keystore2 fall back to the keybox.",
+    label: "StrongBox 仅使用 RKP",
+    help: "存在此属性时，StrongBox 仅通过 RKP 配置证明密钥，不回退到批量密钥。删除后允许 keystore2 回退至密钥箱。",
     kind: "deletable",
   },
   {
     key: "enableRkpd",
     name: "persist.device_config.remote_key_provisioning_native.enable_rkpd",
-    label: "Enable rkpd",
-    help: "Whether the native remote key provisioning daemon (rkpd) runs on this device.",
+    label: "启用 rkpd",
+    help: "控制是否在本设备运行原生远程密钥配置守护进程（rkpd）。",
     kind: "toggle",
   },
 ];

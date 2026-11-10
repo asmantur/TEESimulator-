@@ -41,15 +41,15 @@ export async function listKeyboxes() {
 // offer to overwrite. { ok, name? , error? }.
 export async function importKeybox(name, xmlText, existing = [], overwrite = false) {
   const safe = safeName(name);
-  if (!safe) return { ok: false, error: "Invalid keybox name. Use letters, digits, . _ - and an .xml suffix." };
+  if (!safe) return { ok: false, error: "密钥箱名称无效。仅支持英文字母、数字、. _ -，且须以 .xml 结尾。" };
 
   const text = xmlText == null ? "" : String(xmlText);
   if (!text.includes("<AndroidAttestation") && !text.includes("<Keybox")) {
-    return { ok: false, error: "That file does not look like a keybox (no <AndroidAttestation> or <Keybox>)." };
+    return { ok: false, error: "此文件不是有效的密钥箱：缺少 <AndroidAttestation> 或 <Keybox>。" };
   }
 
   if (!overwrite && existing.includes(safe)) {
-    return { ok: false, exists: true, name: safe, error: `A keybox named ${safe} already exists.` };
+    return { ok: false, exists: true, name: safe, error: `已存在名为 ${safe} 的密钥箱。` };
   }
 
   const r = await writeFileAtomic(DIR + "/" + safe, text);
@@ -61,10 +61,10 @@ export async function importKeybox(name, xmlText, existing = [], overwrite = fal
 export async function renameKeybox(oldName, newName, existing = []) {
   const from = safeName(oldName);
   const to = safeName(newName);
-  if (!from) return { ok: false, error: "Invalid current keybox name." };
-  if (!to) return { ok: false, error: "Invalid new keybox name. Use letters, digits, . _ - and an .xml suffix." };
+  if (!from) return { ok: false, error: "当前密钥箱名称无效。" };
+  if (!to) return { ok: false, error: "新密钥箱名称无效。仅支持英文字母、数字、. _ -，且须以 .xml 结尾。" };
   if (from === to) return { ok: true, name: to };
-  if (existing.includes(to)) return { ok: false, error: `A keybox named ${to} already exists.` };
+  if (existing.includes(to)) return { ok: false, error: `已存在名为 ${to} 的密钥箱。` };
 
   const r = await renameFile(DIR + "/" + from, DIR + "/" + to);
   return r.ok ? { ok: true, name: to } : { ok: false, error: r.error };
@@ -74,7 +74,7 @@ export async function renameKeybox(oldName, newName, existing = []) {
 // built, so rm only ever sees a file inside the module directory.
 export async function deleteKeybox(name) {
   const safe = safeName(name);
-  if (!safe) return { ok: false, error: "Invalid keybox name." };
+  if (!safe) return { ok: false, error: "密钥箱名称无效。" };
 
   const r = await deleteFile(DIR + "/" + safe);
   return r.ok ? { ok: true, name: safe } : { ok: false, error: r.error };

@@ -64,21 +64,21 @@ export async function writeFileAtomic(path, text) {
     "mv -f " + q(tmp) + " " + q(path) + " && chmod 0644 " + q(path) + "\n" +
     b64 + "\n" + marker + "\n";
   const r = await exec(script);
-  return r.errno === 0 ? { ok: true } : { ok: false, error: r.stderr || "write failed" };
+  return r.errno === 0 ? { ok: true } : { ok: false, error: r.stderr || "写入失败" };
 }
 
 // Rename a file. Both paths are argv elements, so run() quotes them and mv only
 // ever sees two inert operands — a name can never become a flag or a command.
 export async function renameFile(from, to) {
   const r = await run(["mv", from, to]);
-  return r.errno === 0 ? { ok: true } : { ok: false, error: r.stderr || "rename failed" };
+  return r.errno === 0 ? { ok: true } : { ok: false, error: r.stderr || "重命名失败" };
 }
 
 // Remove a file. -f so a missing target is not an error; the path is a quoted
 // argv element, never interpolated.
 export async function deleteFile(path) {
   const r = await run(["rm", "-f", path]);
-  return r.errno === 0 ? { ok: true } : { ok: false, error: r.stderr || "delete failed" };
+  return r.errno === 0 ? { ok: true } : { ok: false, error: r.stderr || "删除失败" };
 }
 
 // Read a system property's current value. An absent/unset property yields an empty string (getprop
@@ -104,5 +104,5 @@ export async function setProp(name, value) {
     if (r.errno === 0) return { ok: true };
     last = r.stderr || ("exit " + r.errno);
   }
-  return { ok: false, error: last || "no working resetprop/setprop" };
+  return { ok: false, error: last || "resetprop/setprop 均不可用" };
 }

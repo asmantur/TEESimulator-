@@ -24,7 +24,7 @@ export function renderSystem(mount, state, actions) {
   const { status = null, update = null, probed = false,
           variant = "release", installing = false, installError = null, notesOpen = false } = state;
 
-  mount.appendChild(el("div", { class: "panel-head" }, [el("h1", { class: "panel-title", text: "System" })]));
+  mount.appendChild(el("div", { class: "panel-head" }, [el("h1", { class: "panel-title", text: "系统" })]));
 
   mount.appendChild(tag(healthCard(status), "health"));
   mount.appendChild(tag(harvestCard(status, actions), "harvest"));
@@ -58,27 +58,27 @@ function tag(card, name) {
 // --- daemon health -------------------------------------------------------
 function healthCard(status) {
   if (!status) {
-    return el("div", { class: "card" }, [el("h2", { text: "Daemon health" }), el("p", { class: "muted", text: "Reading status…" })]);
+    return el("div", { class: "card" }, [el("h2", { text: "守护进程状态" }), el("p", { class: "muted", text: "正在读取状态…" })]);
   }
   const dot = (cls) => el("span", { class: "dot " + cls });
   // Interceptor: attached is ok; the daemon up but nothing attached yet is a
   // degraded (amber) state, not a hard failure.
   const interceptorDot = status.hookActive ? "ok" : (status.daemonRunning ? "warn" : "off");
-  const interceptorText = status.hookActive ? "active" : (status.daemonRunning ? "not attached" : "inactive");
+  const interceptorText = status.hookActive ? "已激活" : (status.daemonRunning ? "未附加" : "未激活");
 
   const card = el("div", { class: "card" }, [
-    el("h2", { text: "Daemon health" }),
-    row("Daemon", el("span", { class: "status" }, [dot(status.daemonRunning ? "ok" : "off"), status.daemonRunning ? "running" : "stopped"])),
-    row("Interceptor", el("span", { class: "status" }, [dot(interceptorDot), interceptorText])),
+    el("h2", { text: "守护进程状态" }),
+    row("守护进程", el("span", { class: "status" }, [dot(status.daemonRunning ? "ok" : "off"), status.daemonRunning ? "运行中" : "已停止"])),
+    row("拦截器", el("span", { class: "status" }, [dot(interceptorDot), interceptorText])),
     row("Hook", el("span", { class: "chips" }, [
-      el("span", { class: "chip", text: status.hook || "unknown" }),
+      el("span", { class: "chip", text: status.hook || "未知" }),
       status.api ? el("span", { class: "chip", text: "API " + status.api }) : null,
     ])),
   ]);
   if (status.reachable === false) {
     card.appendChild(el("div", { class: "banner" }, [
-      el("div", { text: "Daemon status endpoint unreachable." }),
-      el("div", { class: "muted small", text: status.error || "The daemon isn't responding yet." }),
+      el("div", { text: "无法连接守护进程状态接口。" }),
+      el("div", { class: "muted small", text: status.error || "守护进程暂未响应。" }),
     ]));
   }
   return card;
@@ -103,9 +103,9 @@ let harvestMode = "tee";
 
 function harvestCard(status, actions = {}) {
   const h = status && status.harvest;
-  const card = el("div", { class: "card" }, [el("h2", { text: "Harvest" })]);
+  const card = el("div", { class: "card" }, [el("h2", { text: "设备信息采集" })]);
   if (!status) { card.appendChild(el("p", { class: "muted", text: "—" })); return card; }
-  if (!h) { card.appendChild(el("p", { class: "muted", text: "No harvest record yet." })); return card; }
+  if (!h) { card.appendChild(el("p", { class: "muted", text: "暂无设备信息采集记录。" })); return card; }
 
   const failed = !!h.harvestFailed;
   // overrides: { field: { value, source, editable, userEdited } }. `value` is the machine form (level
@@ -143,13 +143,13 @@ function harvestCard(status, actions = {}) {
     capturedBox.replaceChildren();
     const sb = harvestMode === "strongbox";
     if (failed) {
-      capturedBox.appendChild(el("div", { class: "muted small", text: "No key was attestable (common on certain models after unlocking the bootloader), so nothing was captured — every value below is synthesized." }));
+      capturedBox.appendChild(el("div", { class: "muted small", text: "未能获取任何密钥证明（部分机型解锁引导加载程序后会出现），因此未采集到信息，下方各值均为合成值。" }));
       return;
     }
     if (sb && !sbAvailable) {
-      capturedBox.appendChild(el("div", { class: "muted small", text: "StrongBox has no working hardware on this device; keys requested at StrongBox are generated (not patched) at the TEE version." }));
+      capturedBox.appendChild(el("div", { class: "muted small", text: "本设备没有可用的 StrongBox 硬件。请求 StrongBox 级别的密钥时，将使用 TEE 版本参数生成软件密钥，而非修补硬件证明。" }));
     }
-    capturedBox.appendChild(el("h3", { text: "Captured" }));
+    capturedBox.appendChild(el("h3", { text: "原始采集值" }));
     const rows = el("div", { class: "kv-list" });
     // Show ONLY genuinely captured values. A field the leaf did not carry (null/undefined/empty) gets no
     // row at all — never a "—" or any other placeholder. Every value passed here is the raw capture. A
@@ -198,7 +198,7 @@ function overridesGroup(overrides, actions) {
   );
   if (!fields.length) return null;
   const box = el("div");
-  box.appendChild(el("h3", { text: "Fabricated" }));
+  box.appendChild(el("h3", { text: "Fabricated（替代与合成值）" }));
   const rows = el("div", { class: "kv-list" });
   for (const field of fields) rows.appendChild(overrideRow(field, overrides[field], actions));
   box.appendChild(rows);
@@ -213,13 +213,30 @@ const ORDER = [
   "serial", "imei", "imei2", "meid",
 ];
 
+// Display labels only; JSON fields and override requests keep their original keys.
+const FIELD_LABELS = {
+  deviceLocked: "设备已锁定", verifiedBootState: "验证启动状态",
+  verifiedBootKey: "验证启动密钥", verifiedBootHash: "验证启动哈希",
+  attestationSecurityLevel: "证明安全级别", keymasterSecurityLevel: "Keymaster 安全级别",
+  attestationVersion: "证明版本", keymasterVersion: "Keymaster 版本",
+  moduleHash: "模块哈希", osVersion: "系统版本", osPatchLevel: "系统安全补丁",
+  vendorPatchLevel: "厂商安全补丁", bootPatchLevel: "启动安全补丁",
+  brand: "品牌", device: "设备代号", product: "产品代号", manufacturer: "制造商",
+  model: "型号", serial: "序列号", imei: "IMEI", imei2: "IMEI2", meid: "MEID",
+  harvestedAt: "采集时间",
+};
+
+function fieldLabel(key) {
+  return FIELD_LABELS[key] || key;
+}
+
 const SOURCE_LABEL = { required: "required", supplement: "supplement", synthesized: "synthesized" };
 const HEX_FIELDS = new Set(["verifiedBootKey", "verifiedBootHash", "moduleHash"]);
 
 function overrideRow(field, o, actions) {
   const badge = el("span", { class: "badge badge-" + (o.source || "required"), text: SOURCE_LABEL[o.source] || o.source || "" });
-  const edited = o.userEdited ? el("span", { class: "badge badge-edited", text: "edited" }) : null;
-  const label = el("span", { class: "kv-label" }, [field, badge, edited]);
+  const edited = o.userEdited ? el("span", { class: "badge badge-edited", text: "已修改" }) : null;
+  const label = el("span", { class: "kv-label", title: field }, [fieldLabel(field), badge, edited]);
 
   if (!o.editable) {
     const val = el("span", { class: "kv-val" + (HEX_FIELDS.has(field) ? " mono kv-hex" : ""), text: fmtOverrideValue(field, o.value) });
@@ -231,9 +248,9 @@ function overrideRow(field, o, actions) {
   const save = el("button", {
     class: "btn small", type: "button",
     onclick: () => actions.onSaveOverride && actions.onSaveOverride(field, String(input.value).trim()),
-  }, "Save");
+  }, "保存");
   const reset = o.userEdited
-    ? el("button", { class: "linklike small", type: "button", onclick: () => actions.onResetOverride && actions.onResetOverride(field) }, "reset")
+    ? el("button", { class: "linklike small", type: "button", onclick: () => actions.onResetOverride && actions.onResetOverride(field) }, "重置")
     : null;
   return el("div", { class: "kv kv-stack" }, [label, el("div", { class: "ov-edit" }, [input, save, reset])]);
 }
@@ -251,7 +268,7 @@ function editorFor(field, value) {
   }
   if (HEX_FIELDS.has(field)) {
     return el("input", { class: "ov-input mono", type: "text", value: value || "", maxlength: "64",
-      spellcheck: "false", autocapitalize: "none", placeholder: "64 hex chars" });
+      spellcheck: "false", autocapitalize: "none", placeholder: "64 位十六进制字符" });
   }
   return el("input", { class: "ov-input", type: "number", inputmode: "numeric", value: value || "" });
 }
@@ -272,7 +289,7 @@ function secLevel(n) {
 
 function kvRow(label, val, replaced) {
   return el("div", { class: "kv" + (replaced ? " kv-replaced" : "") }, [
-    el("span", { class: "kv-label", text: label }),
+    el("span", { class: "kv-label", text: fieldLabel(label), title: label }),
     el("span", { class: "kv-val", text: val }),
   ]);
 }
@@ -282,9 +299,9 @@ function kvRow(label, val, replaced) {
 // spotting). `replaced` struck + red when it has a fabricated counterpart.
 function hexRow(rows, label, hex, replaced) {
   const allZero = hex && /^0+$/i.test(hex);
-  const flag = allZero ? el("span", { class: "chip warn small", text: "all zero" }) : null;
+  const flag = allZero ? el("span", { class: "chip warn small", text: "全零" }) : null;
   rows.appendChild(el("div", { class: "kv kv-stack" + (replaced ? " kv-replaced" : "") }, [
-    el("span", { class: "kv-label" }, [label, flag]),
+    el("span", { class: "kv-label", title: label }, [fieldLabel(label), flag]),
     el("span", { class: "mono kv-hex", text: hex || "—" }),
   ]));
 }
@@ -298,65 +315,65 @@ function fmtTime(ms) {
 // --- canary updater ------------------------------------------------------
 function updateCard(s, actions) {
   const { update, probed, variant, installing, installError, notesOpen } = s;
-  const card = el("div", { class: "card" }, [el("h2", { text: "Update" })]);
+  const card = el("div", { class: "card" }, [el("h2", { text: "更新" })]);
 
   // Probe hasn't resolved, or the daemon was unreachable: say so, no controls.
   if (!update) {
-    card.appendChild(el("p", { class: "muted", text: probed ? "Update status unavailable — daemon unreachable." : "Checking for updates…" }));
+    card.appendChild(el("p", { class: "muted", text: probed ? "无法获取更新状态：守护进程不可达。" : "正在检查更新…" }));
     return card;
   }
 
-  const installed = update.installedVersion || (update.currentCode ? "build " + update.currentCode : "unknown");
-  card.appendChild(row("Installed", el("span", { class: "mono small", text: installed })));
+  const installed = update.installedVersion || (update.currentCode ? "构建 " + update.currentCode : "未知");
+  card.appendChild(row("已安装版本", el("span", { class: "mono small", text: installed })));
 
   const latest = update.latest;
   if (!latest) {
-    card.appendChild(el("p", { class: "muted small", text: "No canary release has been published yet." }));
+    card.appendChild(el("p", { class: "muted small", text: "尚未发布测试版本。" }));
     return card;
   }
 
   if (!update.updateAvailable) {
-    card.appendChild(el("div", { class: "status" }, [el("span", { class: "dot ok" }), el("span", { text: "On the latest canary." })]));
+    card.appendChild(el("div", { class: "status" }, [el("span", { class: "dot ok" }), el("span", { text: "已是最新测试版本。" })]));
     return card;
   }
 
   // An update is available: headline pill, what's-new disclosure, variant + Install.
   card.appendChild(el("div", { class: "update-head" }, [
-    el("span", { class: "pill warn", text: "Update available" }),
+    el("span", { class: "pill warn", text: "有可用更新" }),
     el("span", { class: "mono small", text: "canary-" + (latest.code || "?") }),
   ]));
   if (latest.name) card.appendChild(el("div", { class: "small", text: latest.name }));
 
-  card.appendChild(disclosure("What's new", whatsNew(latest), {
+  card.appendChild(disclosure("更新内容", whatsNew(latest), {
     open: notesOpen, onToggle: actions.onToggleNotes, id: "sys-notes",
   }));
 
   // Variant picker (which asset to flash) + the one primary action on this screen.
   card.appendChild(el("div", { class: "field" }, [
-    el("span", { class: "field-label", text: "Build variant" }),
+    el("span", { class: "field-label", text: "构建类型" }),
     segmented(variant, ["release", "debug"], actions.onSelectVariant, installing),
   ]));
 
   card.appendChild(el("div", { class: "update-actions" }, [
     installing
-      ? el("span", { class: "status" }, [el("span", { class: "spinner", "aria-hidden": "true" }), el("span", { class: "muted small", text: "Downloading & flashing…" })])
-      : el("span", { class: "muted small", text: "Flashes " + variant + " over the current module, then reboot to apply." }),
+      ? el("span", { class: "status" }, [el("span", { class: "spinner", "aria-hidden": "true" }), el("span", { class: "muted small", text: "正在下载并刷入…" })])
+      : el("span", { class: "muted small", text: "将" + ({ release: "正式版", debug: "调试版" })[variant] + " 覆盖刷入当前模块，重启后生效。" }),
     el("button", {
-      class: "btn primary", text: installing ? "Installing…" : "Install",
+      class: "btn primary", text: installing ? "正在安装…" : "安装",
       disabled: installing, onclick: () => actions.onInstall(),
     }),
   ]));
 
   if (installError) {
     card.appendChild(el("div", { class: "banner error" }, [
-      el("div", { text: "Install failed" }),
+      el("div", { text: "安装失败" }),
       el("div", { class: "muted small", text: installError }),
     ]));
   }
   return card;
 }
 
-const REPO_URL = "https://github.com/JingMatrix/TEESimulator";
+const REPO_URL = "https://github.com/asmantur/TEESimulator-";
 
 function whatsNew(latest) {
   const nodes = [];
@@ -365,33 +382,33 @@ function whatsNew(latest) {
   const links = [];
   if (latest.commit) {
     links.push(el("a", { class: "linklike mono small", href: REPO_URL + "/commit/" + latest.commit,
-      target: "_blank", rel: "noreferrer", text: "commit " + String(latest.commit).slice(0, 7) }));
+      target: "_blank", rel: "noreferrer", text: "提交 " + String(latest.commit).slice(0, 7) }));
   }
   if (latest.htmlUrl) {
-    links.push(el("a", { class: "linklike small", href: latest.htmlUrl, target: "_blank", rel: "noreferrer", text: "release page ↗" }));
+    links.push(el("a", { class: "linklike small", href: latest.htmlUrl, target: "_blank", rel: "noreferrer", text: "发布页面 ↗" }));
   }
   if (links.length) nodes.push(el("div", { class: "update-links" }, links));
   if (latest.notes) nodes.push(el("div", { class: "notes small md" }, renderMarkdown(latest.notes)));
   const assets = Array.isArray(latest.assets) ? latest.assets : [];
   if (assets.length) {
-    nodes.push(el("div", { class: "muted small", text: "Assets" }));
+    nodes.push(el("div", { class: "muted small", text: "发布文件" }));
     nodes.push(el("ul", { class: "asset-list" }, assets.map((a) =>
       el("li", { class: "asset-row" }, [
-        el("span", { class: "mono small", text: a.name || "(unnamed)" }),
+        el("span", { class: "mono small", text: a.name || "（未命名）" }),
         el("span", { class: "muted small", text: humanSize(a.size) }),
       ]))));
   }
-  if (!nodes.length) nodes.push(el("p", { class: "muted small", text: "No release notes." }));
+  if (!nodes.length) nodes.push(el("p", { class: "muted small", text: "暂无更新说明。" }));
   return nodes;
 }
 
 // --- small shared bits ---------------------------------------------------
 function segmented(value, options, onSelect, disabled) {
-  return el("div", { class: "segmented", role: "group", "aria-label": "Build variant" },
+  return el("div", { class: "segmented", role: "group", "aria-label": "构建类型" },
     options.map((opt) => el("button", {
       type: "button", class: "seg" + (opt === value ? " on" : ""),
       "aria-pressed": opt === value ? "true" : "false", disabled: !!disabled,
-      text: opt.charAt(0).toUpperCase() + opt.slice(1),
+      text: ({ release: "正式版", debug: "调试版" })[opt] || opt,
       onclick: () => onSelect(opt),
     })));
 }
