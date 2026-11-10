@@ -4,4 +4,4 @@ version=${REPLACEMEVER}
 versionCode=${REPLACEMEVERCODE}
 author=JingMatrix
 description=简体中文版：将指定应用的密钥证明重定向至进程内的参考 KeyMint 可信应用。
-updateJson=https://github.com/asmantur/TEESimulator-/releases/download/zh-cn-latest/update.json
+updateJson=https://raw.githubusercontent.com/asmantur/TEESimulator-/updates/update.json

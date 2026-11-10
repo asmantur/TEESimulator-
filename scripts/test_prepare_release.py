@@ -28,6 +28,7 @@ class ReleaseTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             descriptor = json.loads((root / "out/update.json").read_text())
             self.assertEqual(descriptor["versionCode"], 42)
+            self.assertEqual(descriptor["changelog"], "https://raw.githubusercontent.com/example/repo/updates/changelog.md")
             self.assertEqual(descriptor["zipUrl"], "https://github.com/example/repo/releases/download/canary-42/TEESimulator-test-Release.zip")
             self.assertIn("tag=canary-42", output.read_text())
             self.assertEqual(len((root / "out/SHA256SUMS").read_text().splitlines()), 2)

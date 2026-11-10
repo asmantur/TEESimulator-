@@ -41,7 +41,7 @@ descriptor = {
     "version": f"简体中文 {code}",
     "versionCode": int(code),
     "zipUrl": f"https://github.com/{repo}/releases/download/{tag}/{archives['Release'].name}",
-    "changelog": f"https://github.com/{repo}/releases/download/zh-cn-latest/changelog.md",
+    "changelog": f"https://raw.githubusercontent.com/{repo}/updates/changelog.md",
 }
 (out / "update.json").write_text(json.dumps(descriptor, ensure_ascii=False, indent=2) + "\n")
 (out / "changelog.md").write_text(

@@ -131,13 +131,28 @@ jobs:
             gh release create "$TAG" --target "$BUILT_SHA" --prerelease \
               --title "TEESimulator 简体中文版 ${CODE}" --notes-file out/changelog.md
           fi
-          gh release upload "$TAG" out/TEESimulator-*-Release.zip out/TEESimulator-*-Debug.zip out/SHA256SUMS --clobber
-          # Update the rolling descriptor only after the referenced ZIPs were uploaded.
-          if ! gh release view zh-cn-latest >/dev/null 2>&1; then
-            gh release create zh-cn-latest --target "$BUILT_SHA" --prerelease \
-              --title '简体中文版更新入口' --notes '供模块管理器检查中文版更新。'
+          gh release upload "$TAG" out/TEESimulator-*-Release.zip out/TEESimulator-*-Debug.zip --clobber
+          # Metadata lives on a source branch, so Releases contains only flashable ZIPs.
+          # Publish it only after the referenced ZIPs were successfully uploaded.
+          python3 scripts/publish-zh-update.py
+
+      - name: 清理旧的额外发布文件
+        if: steps.plan.outputs.build == 'true'
+        run: |
+          set -euo pipefail
+          # Only remove the extra entry/files created by the earlier Chinese workflow.
+          gh release list --limit 100 --json tagName --jq '.[].tagName' > /tmp/teesim-release-tags
+          if grep -qx 'zh-cn-latest' /tmp/teesim-release-tags; then
+            gh release delete zh-cn-latest --cleanup-tag --yes
           fi
-          gh release upload zh-cn-latest out/update.json out/changelog.md --clobber
+          while IFS= read -r tag; do
+            if [[ "$tag" =~ ^canary-[0-9]+$ ]]; then
+              gh release view "$tag" --json assets --jq '.assets[].name' > /tmp/teesim-release-assets
+              if grep -qx 'SHA256SUMS' /tmp/teesim-release-assets; then
+                gh release delete-asset "$tag" SHA256SUMS --yes
+              fi
+            fi
+          done < /tmp/teesim-release-tags
 
       - name: 保存构建产物及失败诊断
         if: always()

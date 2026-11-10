@@ -12,4 +12,5 @@
 - 发布需要通过 Rust clippy、Gradle `zipRelease zipDebug` 和 `scripts/prepare-zh-release.py` 的产物检查。原生依赖缺失时不能声称完整构建通过。
 - 自动维护只在完整验证成功后推送源码；冲突或检查失败时保留报告，不能通过关闭检查、覆盖汉化、强推或修改预期校验和处理。
 - WebUI 更新来源和模块管理器更新描述都指向本 Fork；修改时检查两者，避免重新切到上游英文版。保持模块 ID 为 `teesim`，不要触碰设备上的用户配置和私有密钥箱。
+- 用户要求 Releases 只展示模块 ZIP，与上游风格一致。更新元数据放在 `updates` 分支，校验和与诊断留在 Actions 产物；不另建元数据 Release 或上传额外的 JSON/校验文件到 Releases。
 - 不自动刷机或发送私有密钥。不要承诺会在聊天关闭后自行开启维护会话；定时执行由 GitHub Actions 完成。
