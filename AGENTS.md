@@ -2,6 +2,8 @@
 
 用户希望长期保留简体中文界面并自动同步上游。维护约定见 `docs/zh-CN-maintenance.md`。
 
+当前状态：用户因额度不足要求暂停自动更新。已移除定时和 push 自动触发，只保留手动运行。除非用户明确要求恢复，不重新启用自动同步、构建或发布。
+
 - 使用当前已有 checkout。云任务已经隔离；除非用户明确要求，不创建 Git worktree。
 - 本 Fork 为 `asmantur/TEESimulator-`，默认中文版维护分支为 `dev`。唯一上游是 `https://github.com/JingMatrix/TEESimulator.git` 的 `dev`。
 - 用户要求维护时，先检查工作区与 Actions 失败日志，保留所有已有改动。使用普通合并处理上游更新，不 reset/force-push，不把汉化文件整批替换回英文。

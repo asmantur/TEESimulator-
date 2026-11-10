@@ -1,11 +1,8 @@
 name: 中文版自动维护
 
 on:
-  schedule:
-    - cron: "0 1 * * *" # About 09:00 Asia/Singapore; GitHub may delay scheduled runs.
+  # Automatic runs are paused at the owner's request. Keep manual execution only.
   workflow_dispatch:
-  push:
-    branches: [dev]
 
 permissions:
   contents: write
@@ -16,7 +13,7 @@ concurrency:
 
 jobs:
   maintain:
-    if: github.repository == 'asmantur/TEESimulator-'
+    if: github.repository == 'asmantur/TEESimulator-' && github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:

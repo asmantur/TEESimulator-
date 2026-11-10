@@ -1,12 +1,14 @@
 # 简体中文版自动维护
 
+**当前已暂停自动更新**：按用户要求，已移除定时和 push 自动触发，仅保留手动运行入口。用户明确要求恢复后才重新启用自动运行。
+
 只需保留 `asmantur/TEESimulator-` 这一个 Fork，不必每次重新 Fork，也不必定期手动点击 Sync fork。
 
 本方案使用现有默认分支 `dev` 作为中文版维护线。GitHub 的定时工作流只在默认分支执行，因此不另建一个无法自动定时运行的汉化分支。原作者 `JingMatrix/TEESimulator` 的 `dev` 是唯一上游来源。
 
 ## 自动处理的事情
 
-工作流：[中文版自动维护](https://github.com/asmantur/TEESimulator-/actions/workflows/zh-cn.yml)。每天 01:00 UTC（新加坡时间约 09:00）运行；GitHub 可能延迟执行。有提交推送到 `dev` 或手动点击 **Run workflow** 时也运行。
+工作流：[中文版自动维护](https://github.com/asmantur/TEESimulator-/actions/workflows/zh-cn.yml)。目前仅手动点击 **Run workflow** 时运行。原每天 01:00 UTC（新加坡时间约 09:00）的定时任务及 `dev` 推送触发均已暂停。
 
 1. 拉取上游固定提交，在临时 runner 内做普通合并，不强制覆盖中文版。
 2. 检查新增英文字符串、配置验证逻辑、维护脚本和 WebUI 语法。
